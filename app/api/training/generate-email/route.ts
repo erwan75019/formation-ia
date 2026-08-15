@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireTrainingAccess } from "@/lib/training/access";
 
 // ======================================================
 // OLLAMA
@@ -65,6 +66,12 @@ function cleanJson(
 export async function POST(
   request: Request
 ) {
+  const access = await requireTrainingAccess("fondamentaux");
+
+  if (!access.authorized) {
+    return access.response;
+  }
+
   try {
     const body =
       (await request.json()) as RequestBody;

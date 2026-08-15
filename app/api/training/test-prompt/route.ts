@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireTrainingAccess } from "@/lib/training/access";
 
 const OLLAMA_URL = "http://127.0.0.1:11434/api/chat";
 const MODEL = "llama3.2:3b";
@@ -36,6 +37,12 @@ INFORMATIONS IMPORTANTES
 `;
 
 export async function POST(request: Request) {
+  const access = await requireTrainingAccess("fondamentaux");
+
+  if (!access.authorized) {
+    return access.response;
+  }
+
   try {
     const body =
       (await request.json()) as RequestBody;

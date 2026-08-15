@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import {
+  getMinimumPlanError,
+  getPracticalEvaluationMinimumPlan,
+  requireTrainingAccess,
+} from "@/lib/training/access";
 
 const OLLAMA_URL =
   "http://127.0.0.1:11434/api/chat";
@@ -102,6 +107,12 @@ function cleanArray(
 export async function POST(
   request: Request
 ) {
+  const access = await requireTrainingAccess("fondamentaux");
+
+  if (!access.authorized) {
+    return access.response;
+  }
+
   try {
     // ==================================================
     // BODY
@@ -113,6 +124,25 @@ export async function POST(
     const lessonId =
       body.lessonId?.trim() ??
       "";
+
+    const minimumPlan =
+      getPracticalEvaluationMinimumPlan(lessonId);
+
+    if (!minimumPlan) {
+      return NextResponse.json(
+        { error: "Contexte de leçon inconnu." },
+        { status: 400 }
+      );
+    }
+
+    const minimumPlanError = getMinimumPlanError(
+      access.profile.plan,
+      minimumPlan
+    );
+
+    if (minimumPlanError) {
+      return minimumPlanError;
+    }
 
     const title =
       body.title?.trim();

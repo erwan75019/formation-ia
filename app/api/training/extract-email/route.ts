@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireTrainingAccess } from "@/lib/training/access";
 
 // ======================================================
 // CONFIGURATION OLLAMA
@@ -109,6 +110,12 @@ function normalizeString(
 export async function POST(
   request: Request
 ) {
+  const access = await requireTrainingAccess("fondamentaux");
+
+  if (!access.authorized) {
+    return access.response;
+  }
+
   try {
     // ==================================================
     // BODY
@@ -327,7 +334,7 @@ Pour "confidence", utilise un entier entre 0 et 100 représentant ta confiance d
             rawResponse
           )
         );
-    } catch (error) {
+    } catch {
       console.error(
         "JSON Ollama invalide :",
         rawResponse
