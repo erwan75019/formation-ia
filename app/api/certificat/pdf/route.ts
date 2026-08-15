@@ -6,45 +6,14 @@ import {
   PDFPage,
 } from "pdf-lib";
 
-import { randomUUID } from "crypto";
 import { readFile } from "fs/promises";
 import path from "path";
 
+import {
+  certificateDefinitions,
+  isCertificateType,
+} from "@/lib/certificates/config";
 import { createClient } from "@/lib/supabase/server";
-
-// ======================================================
-// CONFIGURATION
-// ======================================================
-
-const finalProjectLessons = [
-  "final-01-spec",
-  "final-02-architecture",
-  "final-03-data-security",
-  "final-04-ai-features",
-  "final-05-backend",
-  "final-06-production",
-  "final-07-project",
-];
-
-const COURSE_NAME =
-  "Conception et développement de solutions d'intelligence artificielle";
-
-// ======================================================
-// NUMÉRO
-// ======================================================
-
-function createCertificateNumber() {
-  const year =
-    new Date().getFullYear();
-
-  const code =
-    randomUUID()
-      .replaceAll("-", "")
-      .slice(0, 8)
-      .toUpperCase();
-
-  return `AIA-${year}-FR-${code}`;
-}
 
 // ======================================================
 // NOM
@@ -138,6 +107,61 @@ function drawCenteredText({
   );
 }
 
+function drawCenteredWrappedText({
+  page,
+  text,
+  font,
+  size,
+  y,
+  lineHeight,
+  maxWidth,
+  color,
+  pageWidth,
+}: {
+  page: PDFPage;
+  text: string;
+  font: PDFFont;
+  size: number;
+  y: number;
+  lineHeight: number;
+  maxWidth: number;
+  color: ReturnType<typeof rgb>;
+  pageWidth: number;
+}) {
+  const lines: string[] = [];
+  let currentLine = "";
+
+  for (const word of text.split(" ")) {
+    const candidate = currentLine ? `${currentLine} ${word}` : word;
+
+    if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+      currentLine = candidate;
+    } else {
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+
+      currentLine = word;
+    }
+  }
+
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  lines.forEach((line, index) => {
+    drawCenteredText({
+      page,
+      text: line,
+      font,
+      size,
+      y: y - index * lineHeight,
+      color,
+      pageWidth,
+    });
+  });
+}
+
 function drawCenteredFooterText({
   page,
   text,
@@ -175,11 +199,60 @@ function drawCenteredFooterText({
   );
 }
 
+function drawCertificateCorner({
+  page,
+  x,
+  y,
+  xDirection,
+  yDirection,
+  gold,
+  navy,
+}: {
+  page: PDFPage;
+  x: number;
+  y: number;
+  xDirection: 1 | -1;
+  yDirection: 1 | -1;
+  gold: ReturnType<typeof rgb>;
+  navy: ReturnType<typeof rgb>;
+}) {
+  page.drawLine({
+    start: { x, y },
+    end: { x: x + 52 * xDirection, y },
+    thickness: 1.4,
+    color: gold,
+  });
+  page.drawLine({
+    start: { x, y },
+    end: { x, y: y + 52 * yDirection },
+    thickness: 1.4,
+    color: gold,
+  });
+  page.drawLine({
+    start: { x: x + 7 * xDirection, y: y + 7 * yDirection },
+    end: { x: x + 34 * xDirection, y: y + 7 * yDirection },
+    thickness: 0.7,
+    color: navy,
+  });
+  page.drawLine({
+    start: { x: x + 7 * xDirection, y: y + 7 * yDirection },
+    end: { x: x + 7 * xDirection, y: y + 34 * yDirection },
+    thickness: 0.7,
+    color: navy,
+  });
+  page.drawCircle({
+    x: x + 12 * xDirection,
+    y: y + 12 * yDirection,
+    size: 2.5,
+    color: gold,
+  });
+}
+
 // ======================================================
 // ROUTE
 // ======================================================
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase =
       await createClient();
@@ -202,176 +275,20 @@ export async function GET() {
       );
     }
 
-    const previewMode =
-      process.env.NODE_ENV ===
-      "development";
+    const requestedType = new URL(request.url).searchParams.get("type");
 
-    // ==================================================
-    // PROGRESSION
-    // ==================================================
-
-    const {
-      data: progressData,
-      error: progressError,
-    } = await supabase
-      .from("lesson_progress")
-      .select(
-        `
-          lesson_id,
-          completed,
-          completed_at
-        `
-      )
-      .eq(
-        "user_id",
-        user.id
-      );
-
-    if (progressError) {
-      console.error(
-        "Erreur progression PDF :",
-        progressError
-      );
-
-      return new Response(
-        "Impossible de vérifier la progression.",
-        {
-          status: 500,
-        }
-      );
+    if (!isCertificateType(requestedType)) {
+      return new Response("Type de certificat invalide.", { status: 400 });
     }
 
-    const progress =
-      progressData ?? [];
-
-    const completedIds =
-      new Set(
-        progress
-          .filter(
-            (item) =>
-              item.completed === true
-          )
-          .map(
-            (item) =>
-              item.lesson_id
-          )
-      );
-
-    const formationCompleted =
-      finalProjectLessons.every(
-        (lessonId) =>
-          completedIds.has(
-            lessonId
-          )
-      );
-
-    if (
-      !formationCompleted &&
-      !previewMode
-    ) {
-      return new Response(
-        "Formation non terminée.",
-        {
-          status: 403,
-        }
-      );
-    }
-
-    // ==================================================
-    // VRAIE DATE DE FIN
-    // ==================================================
-
-    const finalLessonProgress =
-      progress.find(
-        (item) =>
-          item.lesson_id ===
-          "final-07-project"
-      );
-
-    const realCompletionDate =
-      finalLessonProgress
-        ?.completed_at ??
-      null;
-
-    if (
-      formationCompleted &&
-      !realCompletionDate
-    ) {
-      console.error(
-        "final-07-project est terminé mais completed_at est vide."
-      );
-
-      return new Response(
-        "Date de fin de formation introuvable.",
-        {
-          status: 400,
-        }
-      );
-    }
-
-    const completionDate =
-      realCompletionDate ??
-      (previewMode
-        ? new Date().toISOString()
-        : null);
-
-    if (!completionDate) {
-      return new Response(
-        "Date de fin introuvable.",
-        {
-          status: 400,
-        }
-      );
-    }
-
-    // ==================================================
-    // NOM
-    // ==================================================
-
-    const metadata =
-      user.user_metadata ?? {};
-
-    const firstName =
-      String(
-        metadata.first_name ??
-          metadata.firstName ??
-          ""
-      ).trim();
-
-    const lastName =
-      String(
-        metadata.last_name ??
-          metadata.lastName ??
-          ""
-      ).trim();
-
-    const metadataFullName =
-      String(
-        metadata.full_name ??
-          metadata.name ??
-          ""
-      ).trim();
-
-    const generatedFullName =
-      `${firstName} ${lastName}`.trim();
-
-    const rawFullName =
-      metadataFullName ||
-      generatedFullName ||
-      user.email?.split("@")[0] ||
-      "Étudiant AI Academy";
-
-    const fullName =
-      formatName(
-        rawFullName
-      );
+    const definition = certificateDefinitions[requestedType];
 
     // ==================================================
     // CERTIFICAT EXISTANT
     // ==================================================
 
     const {
-      data: existingCertificate,
+      data: certificate,
       error: certificateSearchError,
     } = await supabase
       .from("certificates")
@@ -379,6 +296,7 @@ export async function GET() {
         `
           id,
           certificate_number,
+          certificate_type,
           full_name,
           course_name,
           issued_at
@@ -388,6 +306,10 @@ export async function GET() {
         "user_id",
         user.id
       )
+      .eq(
+        "certificate_type",
+        requestedType
+      )
       .maybeSingle();
 
     if (certificateSearchError) {
@@ -395,90 +317,6 @@ export async function GET() {
         "Erreur certificat PDF :",
         certificateSearchError
       );
-    }
-
-    let certificate =
-      existingCertificate;
-
-    // ==================================================
-    // CRÉATION OFFICIELLE
-    // ==================================================
-
-    if (
-      !certificate &&
-      formationCompleted &&
-      realCompletionDate
-    ) {
-      const certificateNumber =
-        createCertificateNumber();
-
-      const {
-        data: createdCertificate,
-        error: createError,
-      } = await supabase
-        .from("certificates")
-        .insert({
-          user_id:
-            user.id,
-
-          certificate_number:
-            certificateNumber,
-
-          full_name:
-            fullName,
-
-          course_name:
-            COURSE_NAME,
-
-          issued_at:
-            realCompletionDate,
-        })
-        .select(
-          `
-            id,
-            certificate_number,
-            full_name,
-            course_name,
-            issued_at
-          `
-        )
-        .single();
-
-      if (createError) {
-        console.error(
-          "Erreur création certificat PDF :",
-          createError
-        );
-      }
-
-      certificate =
-        createdCertificate;
-    }
-
-    // ==================================================
-    // PREVIEW
-    // ==================================================
-
-    if (
-      !certificate &&
-      previewMode
-    ) {
-      certificate = {
-        id:
-          "preview",
-
-        certificate_number:
-          "AIA-2026-FR-PREVIEW",
-
-        full_name:
-          fullName,
-
-        course_name:
-          COURSE_NAME,
-
-        issued_at:
-          completionDate,
-      };
     }
 
     if (!certificate) {
@@ -533,7 +371,7 @@ export async function GET() {
     );
 
     pdfDoc.setSubject(
-      COURSE_NAME
+      definition.name
     );
 
     // ==================================================
@@ -608,13 +446,6 @@ export async function GET() {
         0.45
       );
 
-    const white =
-      rgb(
-        1,
-        1,
-        1
-      );
-
     // ==================================================
     // FOND
     // ==================================================
@@ -644,7 +475,7 @@ export async function GET() {
       borderColor:
         navy,
       borderWidth:
-        3,
+        6,
     });
 
     page.drawRectangle({
@@ -668,71 +499,59 @@ export async function GET() {
       height:
         pageHeight - 54,
       borderColor:
-        navy,
+        gold,
       borderWidth:
-        0.6,
+        0.7,
     });
 
-    // ==================================================
-    // LOGO
-    // ==================================================
-
-    page.drawRectangle({
-      x: 54,
-      y:
-        pageHeight - 104,
-      width:
-        54,
-      height:
-        54,
-      color:
-        navy,
+    drawCertificateCorner({
+      page,
+      x: 35,
+      y: pageHeight - 35,
+      xDirection: 1,
+      yDirection: -1,
+      gold,
+      navy,
+    });
+    drawCertificateCorner({
+      page,
+      x: pageWidth - 35,
+      y: pageHeight - 35,
+      xDirection: -1,
+      yDirection: -1,
+      gold,
+      navy,
+    });
+    drawCertificateCorner({
+      page,
+      x: 35,
+      y: 35,
+      xDirection: 1,
+      yDirection: 1,
+      gold,
+      navy,
+    });
+    drawCertificateCorner({
+      page,
+      x: pageWidth - 35,
+      y: 35,
+      xDirection: -1,
+      yDirection: 1,
+      gold,
+      navy,
     });
 
-    page.drawText(
-      "AI",
-      {
-        x: 69,
-        y:
-          pageHeight - 85,
-        size:
-          19,
-        font:
-          bold,
-        color:
-          white,
-      }
-    );
+    const watermark = "AI";
+    const watermarkSize = 190;
 
-    page.drawText(
-      "AI Academy",
-      {
-        x: 126,
-        y:
-          pageHeight - 71,
-        size:
-          24,
-        font:
-          serifBold,
-        color:
-          navy,
-      }
-    );
-
-    page.drawText(
-      "Certification",
-      {
-        x: 126,
-        y:
-          pageHeight - 90,
-        size:
-          9,
-        font:
-          regular,
-        color:
-          gold,
-      }
-    );
+    page.drawText(watermark, {
+      x: centeredX(watermark, serifBold, watermarkSize, pageWidth),
+      y: 205,
+      size: watermarkSize,
+      font: serifBold,
+      color: navy,
+      opacity: 0.035,
+    });
 
     // ==================================================
     // NUMÉRO
@@ -859,10 +678,22 @@ export async function GET() {
     // TITRE
     // ==================================================
 
+    let certificateTitleSize = 18;
+
+    while (
+      serifBold.widthOfTextAtSize(
+        definition.name.toUpperCase(),
+        certificateTitleSize
+      ) > 650 &&
+      certificateTitleSize > 11
+    ) {
+      certificateTitleSize -= 1;
+    }
+
     drawCenteredText({
       page,
       text:
-        "CERTIFICAT DE RÉUSSITE",
+        definition.title.toUpperCase(),
       font:
         serifBold,
       size:
@@ -996,28 +827,13 @@ export async function GET() {
     drawCenteredText({
       page,
       text:
-        "CONCEPTION ET DÉVELOPPEMENT DE SOLUTIONS",
+        definition.name.toUpperCase(),
       font:
         serifBold,
       size:
-        18,
+        certificateTitleSize,
       y:
-        251,
-      color:
-        navy,
-      pageWidth,
-    });
-
-    drawCenteredText({
-      page,
-      text:
-        "D'INTELLIGENCE ARTIFICIELLE",
-      font:
-        serifBold,
-      size:
-        18,
-      y:
-        228,
+        239,
       color:
         navy,
       pageWidth,
@@ -1027,31 +843,19 @@ export async function GET() {
     // DESCRIPTION
     // ==================================================
 
-    drawCenteredText({
+    drawCenteredWrappedText({
       page,
-      text:
-        "et a validé les compétences nécessaires à la compréhension,",
+      text: definition.description,
       font:
         regular,
       size:
         9,
       y:
         202,
-      color:
-        slate,
-      pageWidth,
-    });
-
-    drawCenteredText({
-      page,
-      text:
-        "à la conception et au développement de solutions basées sur l'intelligence artificielle.",
-      font:
-        regular,
-      size:
-        9,
-      y:
-        186,
+      lineHeight:
+        16,
+      maxWidth:
+        610,
       color:
         slate,
       pageWidth,
@@ -1093,6 +897,46 @@ export async function GET() {
       color:
         gold,
       pageWidth,
+    });
+
+    // ==================================================
+    // SCEAU AI ACADEMY
+    // ==================================================
+
+    const sealCenterX = 145;
+    const sealCenterY = 91;
+
+    page.drawCircle({
+      x: sealCenterX,
+      y: sealCenterY,
+      size: 43,
+      borderColor: gold,
+      borderWidth: 1.8,
+    });
+    page.drawCircle({
+      x: sealCenterX,
+      y: sealCenterY,
+      size: 35,
+      borderColor: navy,
+      borderWidth: 0.8,
+    });
+    drawCenteredFooterText({
+      page,
+      text: "AI",
+      centerX: sealCenterX,
+      y: 88,
+      size: 21,
+      font: serifBold,
+      color: navy,
+    });
+    drawCenteredFooterText({
+      page,
+      text: "AI ACADEMY",
+      centerX: sealCenterX,
+      y: 72,
+      size: 6,
+      font: bold,
+      color: gold,
     });
 
     drawCenteredText({
@@ -1297,7 +1141,7 @@ export async function GET() {
             "application/pdf",
 
           "Content-Disposition":
-            `attachment; filename="certificat-ai-academy-${safeName || "etudiant"}.pdf"`,
+            `attachment; filename="certificat-${requestedType}-ai-academy-${safeName || "etudiant"}.pdf"`,
 
           "Cache-Control":
             "private, no-store",

@@ -1,39 +1,24 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
-import { randomUUID } from "crypto";
+
+import CertificateGenerateButton from "@/components/certificates/CertificateGenerateButton";
+import {
+  certificateDefinitions,
+  certificateTypes,
+  hasCertificateAccess,
+  type CertificateType,
+} from "@/lib/certificates/config";
 import { createClient } from "@/lib/supabase/server";
 
-const finalProjectLessons = [
-  "final-01-spec",
-  "final-02-architecture",
-  "final-03-data-security",
-  "final-04-ai-features",
-  "final-05-backend",
-  "final-06-production",
-  "final-07-project",
-];
-
-const CERTIFICATE_COURSE_NAME =
-  "Conception et développement de solutions d’intelligence artificielle";
-
-// ======================================================
-// NUMÉRO CERTIFICAT
-// ======================================================
-
-function createCertificateNumber() {
-  const year = new Date().getFullYear();
-
-  const code = randomUUID()
-    .replaceAll("-", "")
-    .slice(0, 8)
-    .toUpperCase();
-
-  return `AIA-${year}-FR-${code}`;
-}
-
-// ======================================================
-// DATE
-// ======================================================
+type Certificate = {
+  id: string;
+  certificate_number: string;
+  certificate_type: CertificateType;
+  full_name: string;
+  course_name: string;
+  issued_at: string;
+};
 
 function formatCertificateDate(date: string) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -43,34 +28,8 @@ function formatCertificateDate(date: string) {
   }).format(new Date(date));
 }
 
-// ======================================================
-// NOM
-// ======================================================
-
-function formatName(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map(
-      (part: string) =>
-        part.charAt(0).toUpperCase() +
-        part.slice(1).toLowerCase()
-    )
-    .join(" ");
-}
-
-// ======================================================
-// PAGE
-// ======================================================
-
 export default async function CertificatePage() {
   const supabase = await createClient();
-
-  // ======================================================
-  // USER
-  // ======================================================
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -79,592 +38,339 @@ export default async function CertificatePage() {
     redirect("/connexion");
   }
 
-  // ======================================================
-  // PROGRESSION
-  // ======================================================
+  const [profileResult, progressResult, certificatesResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("plan, subscription_status")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("lesson_progress")
+      .select("lesson_id, completed, completed_at")
+      .eq("user_id", user.id),
+    supabase
+      .from("certificates")
+      .select(
+        "id, certificate_number, certificate_type, full_name, course_name, issued_at"
+      )
+      .eq("user_id", user.id),
+  ]);
 
-  const {
-    data: progressData,
-    error: progressError,
-  } = await supabase
-    .from("lesson_progress")
-    .select(`
-      lesson_id,
-      completed,
-      completed_at
-    `)
-    .eq("user_id", user.id);
-
-  if (progressError) {
-    console.error(
-      "Erreur récupération progression certificat :",
-      progressError
-    );
+  if (profileResult.error) {
+    console.error("Erreur profil certificats :", profileResult.error.message);
   }
 
-  const progress = progressData ?? [];
+  if (progressResult.error) {
+    console.error("Erreur progression certificats :", progressResult.error.message);
+  }
 
-  const completedIds = new Set(
+  if (certificatesResult.error) {
+    console.error("Erreur lecture certificats :", certificatesResult.error.message);
+  }
+
+  const profile = profileResult.data;
+  const progress = progressResult.data ?? [];
+  const certificates = (certificatesResult.data ?? []) as Certificate[];
+  const completedLessonIds = new Set(
     progress
-      .filter((item) => item.completed === true)
+      .filter(
+        (item) => item.completed === true && typeof item.completed_at === "string"
+      )
       .map((item) => item.lesson_id)
   );
 
-  const formationCompleted = finalProjectLessons.every((lessonId) =>
-    completedIds.has(lessonId)
+  const certificatesByType = new Map(
+    certificates.map((certificate) => [certificate.certificate_type, certificate])
   );
 
-  // ======================================================
-  // PREVIEW DEV
-  // ======================================================
+  return (
+    <main className="min-h-screen bg-[#f4f6f8] text-[#08172c] print:bg-white">
+      <style>{`
+        @media print {
+          @page { size: A4 landscape; margin: 10mm; }
+          .certificate-sheet { break-after: page; }
+        }
+      `}</style>
 
-  const previewMode = process.env.NODE_ENV === "development";
-
-  if (!formationCompleted && !previewMode) {
-    redirect("/dashboard");
-  }
-
-  // ======================================================
-  // NOM COMPLET
-  // ======================================================
-
-  const metadata = user.user_metadata ?? {};
-
-  const firstName = String(
-    metadata.first_name ??
-      metadata.firstName ??
-      ""
-  ).trim();
-
-  const lastName = String(
-    metadata.last_name ??
-      metadata.lastName ??
-      ""
-  ).trim();
-
-  const metadataFullName = String(
-    metadata.full_name ??
-      metadata.name ??
-      ""
-  ).trim();
-
-  const generatedFullName =
-    `${firstName} ${lastName}`.trim();
-
-  const rawFullName =
-    metadataFullName ||
-    generatedFullName ||
-    user.email?.split("@")[0] ||
-    "Étudiant AI Academy";
-
-  const fullName = formatName(rawFullName);
-
-  // ======================================================
-  // VRAIE DATE DE FIN
-  // ======================================================
-
-  const finalLessonProgress = progress.find(
-    (item) =>
-      item.lesson_id === "final-07-project"
-  );
-
-  const completionDate =
-    finalLessonProgress?.completed_at ?? null;
-
-  // ======================================================
-  // CERTIFICAT EXISTANT
-  // ======================================================
-
-  const {
-    data: existingCertificate,
-    error: certificateSearchError,
-  } = await supabase
-    .from("certificates")
-    .select(`
-      id,
-      certificate_number,
-      full_name,
-      course_name,
-      issued_at
-    `)
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (certificateSearchError) {
-    console.error(
-      "Erreur récupération certificat :",
-      certificateSearchError
-    );
-  }
-
-  let certificate = existingCertificate;
-
-  // ======================================================
-  // CRÉATION CERTIFICAT OFFICIEL
-  // ======================================================
-
-  if (
-    !certificate &&
-    formationCompleted &&
-    completionDate
-  ) {
-    const certificateNumber =
-      createCertificateNumber();
-
-    const {
-      data: newCertificate,
-      error: certificateCreateError,
-    } = await supabase
-      .from("certificates")
-      .insert({
-        user_id: user.id,
-        certificate_number: certificateNumber,
-        full_name: fullName,
-        course_name: CERTIFICATE_COURSE_NAME,
-
-        // IMPORTANT :
-        // la date enregistrée est celle où
-        // final-07-project a été terminé.
-        issued_at: completionDate,
-      })
-      .select(`
-        id,
-        certificate_number,
-        full_name,
-        course_name,
-        issued_at
-      `)
-      .single();
-
-    if (certificateCreateError) {
-      console.error(
-        "Erreur création certificat :",
-        certificateCreateError
-      );
-    }
-
-    certificate = newCertificate;
-  }
-
-  // ======================================================
-  // PREVIEW DÉVELOPPEUR
-  // ======================================================
-
-  if (!certificate && previewMode) {
-    certificate = {
-      id: "preview",
-
-      certificate_number:
-        "AIA-2026-FR-PREVIEW",
-
-      full_name: fullName,
-
-      course_name:
-        CERTIFICATE_COURSE_NAME,
-
-      // Si la formation est réellement terminée :
-      // vraie date.
-      //
-      // Sinon en preview :
-      // date actuelle uniquement pour visualiser.
-      issued_at:
-        completionDate ??
-        new Date().toISOString(),
-    };
-  }
-
-  // ======================================================
-  // ERREUR
-  // ======================================================
-
-  if (!certificate) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f4f6f8] px-6">
-        <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center bg-[#07172c] font-bold text-white">
-            AI
-          </div>
-
-          <h1 className="mt-6 text-2xl font-bold">
-            Certificat indisponible
-          </h1>
-
-          <p className="mt-3 text-slate-500">
-            Impossible de générer votre certificat.
-          </p>
+      <header className="border-b border-slate-200 bg-white print:hidden">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-3 font-bold"
+          >
+            <span className="flex h-10 w-10 items-center justify-center bg-[#07172c] text-white">
+              AI
+            </span>
+            AI Academy
+          </Link>
 
           <Link
             href="/dashboard"
-            className="mt-6 inline-flex rounded-xl bg-[#07172c] px-5 py-3 font-semibold text-white"
+            className="text-sm font-medium text-slate-600 hover:text-slate-950"
           >
             Retour au dashboard
           </Link>
         </div>
-      </main>
-    );
-  }
-
-  // ======================================================
-  // DONNÉES AFFICHÉES
-  // ======================================================
-
-  const certificateFullName = formatName(
-    String(certificate.full_name)
-  );
-
-  const issueDate = formatCertificateDate(
-    String(certificate.issued_at)
-  );
-
-  const initials = certificateFullName
-    .split(" ")
-    .filter(Boolean)
-    .map((part: string) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  const canDownloadPdf =
-    formationCompleted || previewMode;
-
-  // ======================================================
-  // UI
-  // ======================================================
-
-  return (
-    <main className="min-h-screen bg-[#f4f6f8] text-[#08172c]">
-      {/* ==================================================
-          NAVIGATION
-      ================================================== */}
-
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-6">
-          <div className="flex items-center gap-9">
-            <Link
-              href="/dashboard"
-              className="flex h-11 w-11 items-center justify-center bg-[#07172c] font-bold text-white"
-            >
-              AI
-            </Link>
-
-            <nav className="hidden h-16 items-center gap-8 lg:flex">
-              <Link
-                href="/dashboard"
-                className="text-sm text-slate-500 transition hover:text-slate-950"
-              >
-                Tableau de bord
-              </Link>
-
-              <Link
-                href="/dashboard#parcours"
-                className="text-sm text-slate-500 transition hover:text-slate-950"
-              >
-                Ma formation
-              </Link>
-
-              <Link
-                href="/projets"
-                className="text-sm text-slate-500 transition hover:text-slate-950"
-              >
-                Mes projets
-              </Link>
-
-              <Link
-                href="/certificat"
-                className="flex h-16 items-center border-b-2 border-[#07172c] text-sm font-semibold"
-              >
-                Mon certificat
-              </Link>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#07172c] text-[11px] font-bold text-white">
-              {initials || "AI"}
-            </div>
-
-            <span className="hidden text-sm font-semibold sm:block">
-              {certificateFullName}
-            </span>
-          </div>
-        </div>
       </header>
 
-      {/* ==================================================
-          PAGE
-      ================================================== */}
-
-      <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-6">
-        {/* ACTIONS */}
-
-        <div className="mx-auto mb-6 flex max-w-[1260px] flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <Link
-            href="/dashboard"
-            className="text-sm font-medium text-slate-700 transition hover:text-slate-950"
-          >
-            ← Retour au dashboard
-          </Link>
-
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/projets"
-              className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold shadow-sm transition hover:border-slate-300"
-            >
-              Mes projets
-            </Link>
-
-            {canDownloadPdf ? (
-              <Link
-                href="/api/certificat/pdf"
-                className="rounded-xl bg-[#07172c] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:scale-[1.01]"
-              >
-                ↓ Télécharger le PDF
-              </Link>
-            ) : (
-              <div className="cursor-not-allowed rounded-xl bg-slate-300 px-6 py-3 text-sm font-semibold text-slate-500">
-                PDF après validation
-              </div>
-            )}
-          </div>
+      <section className="mx-auto max-w-6xl px-6 py-12">
+        <div className="print:hidden">
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Certifications AI Academy
+          </p>
+          <h1 className="mt-3 text-4xl font-bold">Mes certificats</h1>
+          <p className="mt-4 max-w-3xl leading-7 text-slate-600">
+            Chaque certificat est délivré après vérification sécurisée de votre
+            offre et de toutes les leçons requises. Un certificat déjà délivré
+            reste disponible même après la fin de l’abonnement.
+          </p>
         </div>
 
-        {/* PREVIEW */}
+        <div className="mt-10 space-y-8">
+          {certificateTypes.map((type) => {
+            const definition = certificateDefinitions[type];
+            const certificate = certificatesByType.get(type);
+            const completedCount = definition.lessonIds.filter((lessonId) =>
+              completedLessonIds.has(lessonId)
+            ).length;
+            const lessonsCompleted =
+              completedCount === definition.lessonIds.length;
+            const planEligible = hasCertificateAccess(
+              type,
+              profile?.plan,
+              profile?.subscription_status
+            );
+            const eligible = planEligible && lessonsCompleted;
 
-        {previewMode && !formationCompleted && (
-          <div className="mx-auto mb-5 max-w-[1260px] rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-xs font-semibold text-slate-500">
-            Aperçu développeur — certificat non officiellement délivré.
-          </div>
-        )}
-
-        {/* ==================================================
-            CERTIFICAT
-        ================================================== */}
-
-        <section className="mx-auto max-w-[1260px] overflow-x-auto pb-2">
-          <div className="min-w-[920px] bg-white p-3 shadow-[0_18px_55px_rgba(15,23,42,0.16)]">
-            <div
-              className="relative overflow-hidden"
-              style={{
-                backgroundColor: "#fffdf7",
-                width: "100%",
-                height: "820px",
-              }}
-            >
-              {/* CADRES */}
-
-              <div className="pointer-events-none absolute inset-[8px] border-[4px] border-[#07172c]" />
-
-              <div className="pointer-events-none absolute inset-[17px] border border-[#b88832]" />
-
-              <div className="pointer-events-none absolute inset-[23px] border border-[#07172c]" />
-
-              <div className="pointer-events-none absolute inset-[29px] border border-[#d0a759]" />
-
-              {/* COINS */}
-
-              <CertificateCorner position="tl" />
-              <CertificateCorner position="tr" />
-              <CertificateCorner position="bl" />
-              <CertificateCorner position="br" />
-
-              {/* ==================================================
-                  CONTENU
-              ================================================== */}
-
-              <div className="relative z-10 flex h-full flex-col px-[72px] pb-[40px] pt-[46px]">
-                {/* ==================================================
-                    HEADER
-                ================================================== */}
-
-                <div className="grid grid-cols-[1fr_auto_1fr] items-start">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-[70px] w-[70px] items-center justify-center bg-[#07172c] text-2xl font-bold text-white">
-                      AI
-                    </div>
-
-                    <div>
-                      <p className="font-serif text-[30px] font-semibold leading-none">
-                        AI Academy
-                      </p>
-
-                      <p className="mt-2 text-[10px] font-semibold text-[#a5731e]">
-                        Certification
-                      </p>
-                    </div>
-                  </div>
-
-                  <div />
-
-                  <div className="text-right">
-                    <p className="text-[10px] font-semibold tracking-[0.05em] text-[#a5731e]">
-                      CERTIFICAT N°
+            return (
+              <article
+                key={type}
+                className={`rounded-3xl border border-slate-200 bg-white p-7 shadow-sm ${
+                  certificate
+                    ? "print:border-0 print:p-0 print:shadow-none"
+                    : "print:hidden"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-4 print:hidden">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#a5731e]">
+                      Certificat {type}
                     </p>
-
-                    <div className="ml-auto mt-2 h-px w-[190px] bg-[#b88832]" />
-
-                    <p className="mt-3 text-[12px] font-bold">
-                      {certificate.certificate_number}
+                    <h2 className="mt-3 text-2xl font-bold">
+                      {definition.title}
+                    </h2>
+                    <p className="mt-1 font-serif text-lg text-slate-700">
+                      {definition.name}
+                    </p>
+                    <p className="mt-4 leading-6 text-slate-600">
+                      {definition.description}
                     </p>
                   </div>
+
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      certificate
+                        ? "bg-emerald-100 text-emerald-800"
+                        : eligible
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {certificate
+                      ? "Délivré"
+                      : eligible
+                        ? "Éligible"
+                        : "À compléter"}
+                  </span>
                 </div>
 
-                {/* ==================================================
-                    TITRE
-                ================================================== */}
+                {certificate ? (
+                  <div className="mt-7">
+                    <CertificatePreview
+                      certificate={certificate}
+                      heading={definition.title}
+                      title={definition.name}
+                      description={definition.description}
+                    />
 
-                <div className="mt-8 text-center">
-                  <CertificateDivider />
-
-                  <h1 className="mt-3 font-serif text-[27px] font-bold uppercase tracking-[0.04em]">
-                    Certificat de réussite
-                  </h1>
-                </div>
-
-                {/* ==================================================
-                    CONTENU CENTRAL
-                ================================================== */}
-
-                <div className="mt-8 text-center">
-                  <p className="font-serif text-[17px] text-slate-600">
-                    Ce certificat atteste que
-                  </p>
-
-                  <h2 className="mt-5 font-serif text-[56px] font-semibold leading-none tracking-tight">
-                    {certificateFullName}
-                  </h2>
-
-                  {/* LIGNE SOUS NOM */}
-
-                  <div className="mx-auto mt-6 flex max-w-[570px] items-center">
-                    <div className="h-px flex-1 bg-[#b88832]" />
-
-                    <span className="mx-3 text-[10px] text-[#b88832]">
-                      ●
-                    </span>
-
-                    <div className="h-px flex-1 bg-[#b88832]" />
+                    <Link
+                      href={`/api/certificat/pdf?type=${type}`}
+                      className="mt-6 inline-flex rounded-xl bg-[#07172c] px-5 py-3 text-sm font-semibold text-white print:hidden"
+                    >
+                      Télécharger le PDF
+                    </Link>
                   </div>
-
-                  <p className="mt-6 font-serif text-[16px] text-slate-600">
-                    a terminé avec succès la formation
-                  </p>
-
-                  <h3 className="mx-auto mt-4 max-w-[800px] font-serif text-[25px] font-bold uppercase leading-[1.22]">
-                    Conception et développement de solutions
-                    <br />
-                    d&apos;intelligence artificielle
-                  </h3>
-
-                  <p className="mx-auto mt-5 max-w-[690px] text-[13px] leading-[1.7] text-slate-600">
-                    et a validé les compétences nécessaires à la compréhension,
-                    <br />
-                    à la conception et au développement de solutions basées sur
-                    l&apos;intelligence artificielle.
-                  </p>
-
-                  {/* ==================================================
-                      DATE
-                  ================================================== */}
-
-                  <div className="mt-2">
-                    <div className="mx-auto h-px w-[95px] bg-[#b88832]" />
-
-                    <p className="mt-3 text-[9px] font-bold uppercase text-[#a5731e]">
-                      Délivré le
+                ) : (
+                  <div className="mt-7">
+                    <p className="text-sm text-slate-600">
+                      {completedCount} / {definition.lessonIds.length} leçons
+                      validées
                     </p>
 
-                    <p className="mt-2 font-serif text-[20px] font-bold">
-                      {formationCompleted || previewMode
-                        ? issueDate
-                        : "Date de fin de formation"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* ==================================================
-                    SIGNATURE
-                    REMONTÉE POUR NE PLUS DÉBORDER
-                ================================================== */}
-
-                <div className="mt-auto flex justify-end pb-[28px] pr-[55px]">
-                  <div className="w-[220px] text-center">
-                    {/* SIGNATURE */}
-
-                    <div className="flex h-[55px] items-end justify-center">
-                      <img
-                        src="/signature.png"
-                        alt="Signature Direction AI Academy"
-                        className="max-h-[50px] max-w-[150px] object-contain"
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="h-full rounded-full bg-[#07172c]"
+                        style={{
+                          width: `${Math.round(
+                            (completedCount / definition.lessonIds.length) * 100
+                          )}%`,
+                        }}
                       />
                     </div>
 
-                    {/* LIGNE */}
-
-                    <div className="mx-auto mt-1 h-px w-[180px] bg-[#b88832]" />
-
-                    {/* DIRECTION */}
-
-                    <p className="mt-3 text-[8px] font-bold uppercase text-[#a5731e]">
-                      DIRECTION
-                    </p>
-
-                    {/* AI ACADEMY */}
-
-                    <p className="mt-2 font-serif text-[14px] font-bold text-[#08172c]">
-                      AI Academy
-                    </p>
+                    <div className="mt-6">
+                      {eligible ? (
+                        <CertificateGenerateButton type={type} />
+                      ) : !planEligible ? (
+                        <div>
+                          <p className="text-sm text-slate-500">
+                            Une offre compatible active ou en période d’essai est
+                            requise.
+                          </p>
+                          <Link
+                            href="/tarifs"
+                            className="mt-4 inline-flex rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold"
+                          >
+                            Voir les offres
+                          </Link>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-500">
+                          Terminez toutes les leçons requises pour générer ce
+                          certificat.
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </section>
     </main>
   );
 }
 
-// ======================================================
-// DIVIDER
-// ======================================================
-
-function CertificateDivider() {
+function CertificatePreview({
+  certificate,
+  heading,
+  title,
+  description,
+}: {
+  certificate: Certificate;
+  heading: string;
+  title: string;
+  description: string;
+}) {
   return (
-    <div className="flex items-center justify-center gap-7">
-      <div className="h-px w-[100px] bg-[#b88832]" />
+    <section className="certificate-sheet relative mx-auto aspect-[297/210] w-full max-w-[1120px] overflow-hidden bg-[#fffdf7] p-[clamp(2.5rem,7vw,6rem)] text-[#07172c] shadow-[0_20px_60px_rgba(15,23,42,0.16)] print:shadow-none">
+      <div className="pointer-events-none absolute inset-3 border-[6px] border-[#07172c]" />
+      <div className="pointer-events-none absolute inset-6 border border-[#b88832]" />
+      <div className="pointer-events-none absolute inset-[29px] border border-[#d0a759]" />
 
-      <span className="text-[11px] text-[#b88832]">
-        ●
-      </span>
+      <CertificateCorner className="left-[29px] top-[29px]" />
+      <CertificateCorner className="right-[29px] top-[29px] rotate-90" />
+      <CertificateCorner className="bottom-[29px] left-[29px] -rotate-90" />
+      <CertificateCorner className="bottom-[29px] right-[29px] rotate-180" />
 
-      <div className="h-px w-[100px] bg-[#b88832]" />
-    </div>
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center font-serif text-[clamp(9rem,25vw,20rem)] font-bold text-[#07172c]/[0.035]">
+        AI
+      </div>
+
+      <div className="relative z-10 flex h-full flex-col">
+        <header className="flex justify-end">
+          <div className="text-right">
+            <p className="text-[clamp(0.45rem,1vw,0.65rem)] font-bold uppercase tracking-[0.16em] text-[#a5731e]">
+              Certificat n°
+            </p>
+            <p className="mt-2 border-t border-[#b88832] pt-2 text-[clamp(0.55rem,1.3vw,0.8rem)] font-bold tracking-wide">
+              {certificate.certificate_number}
+            </p>
+          </div>
+        </header>
+
+        <div className="flex flex-1 flex-col items-center justify-center px-[5%] text-center">
+          <div className="mb-[clamp(0.5rem,1.5vw,1rem)] flex items-center gap-4 text-[#b88832]">
+            <span className="h-px w-[clamp(3rem,9vw,7rem)] bg-current" />
+            <span className="text-xs">◆</span>
+            <span className="h-px w-[clamp(3rem,9vw,7rem)] bg-current" />
+          </div>
+
+          <h2 className="font-serif text-[clamp(1rem,2.8vw,2rem)] font-bold uppercase tracking-[0.06em]">
+            {heading}
+          </h2>
+
+          <p className="mt-[clamp(0.5rem,1.2vw,0.8rem)] font-serif text-[clamp(0.7rem,1.6vw,1.1rem)] text-slate-600">
+            AI Academy atteste que
+          </p>
+          <h3 className="mt-[clamp(0.5rem,1.4vw,1rem)] font-serif text-[clamp(1.7rem,5vw,4rem)] font-semibold leading-none">
+            {certificate.full_name}
+          </h3>
+          <div className="mt-[clamp(0.6rem,1.6vw,1.1rem)] h-px w-1/2 bg-[#b88832]" />
+
+          <h4 className="mt-[clamp(0.8rem,2vw,1.5rem)] max-w-4xl font-serif text-[clamp(0.9rem,2.3vw,1.65rem)] font-bold uppercase leading-tight tracking-[0.03em]">
+            {title}
+          </h4>
+          <p className="mt-[clamp(0.6rem,1.5vw,1rem)] max-w-3xl text-[clamp(0.55rem,1.15vw,0.85rem)] leading-relaxed text-slate-600">
+            {description}
+          </p>
+        </div>
+
+        <footer className="grid grid-cols-3 items-end gap-6">
+          <div className="flex justify-start">
+            <div className="flex size-[clamp(4rem,9vw,6.5rem)] flex-col items-center justify-center rounded-full border-2 border-[#b88832] outline outline-1 outline-offset-[-7px] outline-[#07172c]">
+              <span className="font-serif text-[clamp(1rem,2.5vw,1.8rem)] font-bold">
+                AI
+              </span>
+              <span className="mt-1 text-[clamp(0.35rem,0.8vw,0.55rem)] font-bold uppercase tracking-[0.12em] text-[#a5731e]">
+                AI Academy
+              </span>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <p className="text-[clamp(0.4rem,0.9vw,0.6rem)] font-bold uppercase tracking-[0.16em] text-[#a5731e]">
+              Délivré le
+            </p>
+            <p className="mt-2 border-t border-[#b88832] pt-2 font-serif text-[clamp(0.65rem,1.4vw,1rem)] font-bold">
+              {formatCertificateDate(certificate.issued_at)}
+            </p>
+          </div>
+
+          <div className="text-center">
+            <div className="flex h-[clamp(2rem,5vw,3.5rem)] items-end justify-center">
+              <Image
+                src="/signature.png"
+                alt="Signature de la direction AI Academy"
+                width={300}
+                height={120}
+                className="max-h-full max-w-[70%] object-contain"
+              />
+            </div>
+            <div className="mt-1 border-t border-[#b88832] pt-2">
+              <p className="text-[clamp(0.4rem,0.9vw,0.6rem)] font-bold uppercase tracking-[0.16em] text-[#a5731e]">
+                Direction
+              </p>
+              <p className="mt-1 font-serif text-[clamp(0.55rem,1.2vw,0.8rem)] font-bold">
+                AI Academy
+              </p>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </section>
   );
 }
 
-// ======================================================
-// COINS
-// ======================================================
-
-function CertificateCorner({
-  position,
-}: {
-  position: "tl" | "tr" | "bl" | "br";
-}) {
-  const classes = {
-    tl: "left-[17px] top-[17px]",
-    tr: "right-[17px] top-[17px] rotate-90",
-    bl: "bottom-[17px] left-[17px] -rotate-90",
-    br: "bottom-[17px] right-[17px] rotate-180",
-  };
-
+function CertificateCorner({ className }: { className: string }) {
   return (
     <div
-      className={`pointer-events-none absolute h-[68px] w-[68px] ${classes[position]}`}
+      className={`pointer-events-none absolute size-[clamp(2.5rem,6vw,5rem)] ${className}`}
     >
-      <div className="absolute left-0 top-0 h-[58px] w-[58px] rounded-tl-[38px] border-l-2 border-t-2 border-[#b88832]" />
-
-      <div className="absolute left-[7px] top-[7px] h-[45px] w-[45px] rounded-tl-[32px] border-l border-t border-[#07172c]" />
+      <div className="absolute left-2 top-2 h-3/4 w-3/4 rounded-tl-[100%] border-l-2 border-t-2 border-[#b88832]" />
+      <div className="absolute left-4 top-4 h-1/2 w-1/2 rounded-tl-[100%] border-l border-t border-[#07172c]" />
+      <div className="absolute left-1 top-1 size-2 rotate-45 border border-[#b88832]" />
     </div>
   );
 }
