@@ -2,240 +2,20 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/LogoutButton";
+import {
+  planModuleLimits,
+  trainingModules,
+  type TrainingPlan,
+} from "@/lib/training/catalog";
 
 // ======================================================
 // TYPES
 // ======================================================
 
-type Plan = "fondamentaux" | "complet";
+type Plan = TrainingPlan;
 
-type ModuleConfig = {
-  number: number;
-  title: string;
-  description: string;
-  route: string;
-  lessonIds: string[];
-};
-
-// ======================================================
-// MODULES
-// ======================================================
-
-const modulesConfig: ModuleConfig[] = [
-  {
-    number: 1,
-    title: "Découvrir ChatGPT",
-    description:
-      "Comprendre ChatGPT et apprendre à bien l'utiliser.",
-    route: "/formation/chatgpt",
-    lessonIds: [
-      "chatgpt-01-intro",
-      "chatgpt-02-interface",
-      "chatgpt-03-prompt",
-      "chatgpt-04-contexte",
-      "chatgpt-05-format",
-    ],
-  },
-
-  {
-    number: 2,
-    title: "Maîtriser les prompts",
-    description:
-      "Apprendre à communiquer efficacement avec une IA.",
-    route: "/formation/prompts",
-    lessonIds: [
-      "prompts-01-structure",
-      "prompts-02-role",
-      "prompts-03-templates",
-      "prompts-04-iteration",
-      "prompts-05-project",
-    ],
-  },
-
-  {
-    number: 3,
-    title: "ChatGPT au quotidien",
-    description:
-      "Travail, études, recherche et organisation.",
-    route: "/formation/quotidien",
-    lessonIds: [
-      "quotidien-01-travail",
-      "quotidien-02-etudes",
-      "quotidien-03-recherche",
-      "quotidien-04-documents",
-      "quotidien-05-mission",
-    ],
-  },
-
-  {
-    number: 4,
-    title: "Travailler avec ses fichiers grâce à l’IA",
-    description:
-      "Comprendre, organiser et transformer ses informations grâce à l’IA.",
-    route: "/formation/comprendre-ia",
-    lessonIds: [
-      "ia-01-llm",
-      "ia-02-tokens",
-      "ia-03-contexte",
-      "ia-04-entrainement",
-      "ia-05-hallucinations",
-    ],
-  },
-
-  {
-    number: 5,
-    title: "Automatiser son travail avec l'IA",
-    description:
-      "Créer des automatisations utiles pour gagner du temps au quotidien.",
-    route: "/formation/automatisation",
-    lessonIds: [
-      "automation-01-logic",
-      "automation-02-tri",
-      "automation-03-extraction",
-      "automation-04-email",
-      "automation-05-control",
-      "automation-06-workflow",
-      "automation-07-project",
-    ],
-  },
-
-  // ====================================================
-  // MODULE 06 — NOUVELLE VERSION PREMIUM
-  // ====================================================
-
-  {
-    number: 6,
-    title: "Créer un site web de A à Z",
-    description:
-      "Construire PropertyMatch de zéro dans VS Code, le faire fonctionner localement puis le publier sur Internet.",
-    route: "/formation/python",
-    lessonIds: [
-      "web-01-fonctionnement",
-      "web-02-environnement",
-      "web-03-html-jsx",
-      "web-04-css-tailwind",
-      "web-05-javascript",
-      "web-06-react-components",
-      "web-07-react-state",
-      "web-08-nextjs",
-      "web-09-engine",
-      "web-10-application",
-      "web-11-production",
-      "web-12-publication",
-    ],
-  },
-
-  {
-    number: 7,
-    title: "Créer sa première application web",
-    description:
-      "Construire une application utile avec comptes, données et dashboard.",
-    route: "/formation/api-ia",
-    lessonIds: [
-      "api-01-intro",
-      "api-02-http",
-      "api-03-requests",
-      "api-04-response-json",
-      "api-05-auth",
-      "api-06-ai",
-      "api-07-project",
-    ],
-  },
-
-  {
-    number: 8,
-    title: "Créer et lancer un SaaS IA",
-    description:
-      "Transformer une idée en produit IA utilisable et prêt à être proposé.",
-    route: "/formation/supabase",
-    lessonIds: [
-      "supabase-01-database",
-      "supabase-02-tables",
-      "supabase-03-crud",
-      "supabase-04-relations",
-      "supabase-05-auth",
-      "supabase-06-rls",
-      "supabase-07-project",
-    ],
-  },
-
-  {
-    number: 9,
-    title: "Construire des agents IA",
-    description:
-      "Créer des agents capables de raisonner, utiliser des outils et accomplir des tâches.",
-    route: "/formation/saas-ia",
-    lessonIds: [
-      "saas-01-architecture",
-      "saas-02-front-back",
-      "saas-03-auth",
-      "saas-04-database",
-      "saas-05-ai",
-      "saas-06-security",
-      "saas-07-project",
-    ],
-  },
-
-  {
-    number: 10,
-    title: "Connecter et automatiser ses outils",
-    description:
-      "Faire travailler ensemble emails, données, applications et IA dans des workflows avancés.",
-    route: "/formation/agents-ia",
-    lessonIds: [
-      "agents-01-agent-vs-chatbot",
-      "agents-02-objective",
-      "agents-03-tools",
-      "agents-04-tool-calling",
-      "agents-05-loop",
-      "agents-06-memory-state",
-      "agents-07-project",
-    ],
-  },
-
-  {
-    number: 11,
-    title: "Construire des systèmes IA professionnels",
-    description:
-      "Concevoir des systèmes IA robustes, sécurisés et adaptés à une vraie organisation.",
-    route: "/formation/rag",
-    lessonIds: [
-      "rag-01-intro",
-      "rag-02-chunks",
-      "rag-03-embeddings",
-      "rag-04-semantic-search",
-      "rag-05-vector-db",
-      "rag-06-pipeline",
-      "rag-07-project",
-    ],
-  },
-
-  {
-    number: 12,
-    title: "Créer et lancer son produit IA",
-    description:
-      "Construire, tester, sécuriser et présenter un produit IA complet de A à Z.",
-    route: "/formation/projet-final",
-    lessonIds: [
-      "final-01-spec",
-      "final-02-architecture",
-      "final-03-data-security",
-      "final-04-ai-features",
-      "final-05-backend",
-      "final-06-production",
-      "final-07-project",
-    ],
-  },
-];
-
-// ======================================================
-// PLAN → MODULE MAXIMUM
-// ======================================================
-
-const planLimits: Record<Plan, number> = {
-  fondamentaux: 5,
-  complet: 12,
-};
+const modulesConfig = trainingModules;
+const planLimits = planModuleLimits;
 
 const planLabels: Record<Plan, string> = {
   fondamentaux: "Fondamentaux",
@@ -1203,7 +983,6 @@ export default async function Dashboard() {
     </main>
   );
 }
-
 // ======================================================
 // STAT CARD
 // ======================================================

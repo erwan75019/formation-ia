@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 const correctWorkflow = [
   "Formulaire",
@@ -23,7 +22,6 @@ const availableSteps = [
 
 export default function AutomationProjectPage() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [selectedSteps, setSelectedSteps] = useState<string[]>(
     []
@@ -31,7 +29,6 @@ export default function AutomationProjectPage() {
 
   const [validated, setValidated] = useState(false);
   const [passed, setPassed] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   function addStep(step: string) {
@@ -67,7 +64,7 @@ export default function AutomationProjectPage() {
     setErrorMessage("");
   }
 
-  async function validateProject() {
+  function validateProject() {
     if (
       selectedSteps.length !==
       correctWorkflow.length
@@ -96,62 +93,6 @@ export default function AutomationProjectPage() {
     }
 
     setPassed(true);
-    setSaving(true);
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      setSaving(false);
-
-      setErrorMessage(
-        "Vous devez être connecté pour enregistrer votre progression."
-      );
-
-      return;
-    }
-
-    const now = new Date().toISOString();
-
-    const { error } = await supabase
-      .from("lesson_progress")
-      .upsert(
-        {
-          user_id: user.id,
-          lesson_id: "automation-05-project",
-          completed: true,
-
-          /*
-            Ce n'est pas un QCM classique.
-            On considère le projet comme validé à 100 %
-            lorsque la logique du workflow est correcte.
-          */
-          score: 100,
-
-          completed_at: now,
-          last_viewed_at: now,
-        },
-        {
-          onConflict: "user_id,lesson_id",
-        }
-      );
-
-    setSaving(false);
-
-    if (error) {
-      console.error(
-        "Erreur Supabase :",
-        error
-      );
-
-      setPassed(false);
-
-      setErrorMessage(
-        "Le projet est correct mais nous n'avons pas pu enregistrer votre progression."
-      );
-    }
   }
 
   return (
@@ -353,6 +294,9 @@ export default function AutomationProjectPage() {
                 Bravo. Vous avez correctement identifié la logique
                 complète du workflow : déclencheur → récupération
                 des données → IA → classification → action.
+                Cet exercice reste consultatif : aucune progression
+                officielle n&apos;est enregistrée avant la phase de
+                validation sécurisée des projets.
               </p>
             ) : (
               <p className="mt-3 leading-7">
@@ -383,20 +327,16 @@ export default function AutomationProjectPage() {
               }
               disabled={
                 selectedSteps.length !==
-                  correctWorkflow.length ||
-                saving
+                  correctWorkflow.length
               }
               className={`rounded-2xl px-7 py-4 font-semibold transition ${
                 selectedSteps.length !==
-                  correctWorkflow.length ||
-                saving
+                  correctWorkflow.length
                   ? "cursor-not-allowed bg-slate-200 text-slate-400"
                   : "bg-slate-950 text-white hover:scale-[1.02]"
               }`}
             >
-              {saving
-                ? "Enregistrement..."
-                : "Valider mon workflow"}
+              Vérifier mon workflow
             </button>
           )}
 

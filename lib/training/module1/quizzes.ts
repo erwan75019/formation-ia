@@ -1,10 +1,6 @@
-export const module1LessonIds = [
-  "chatgpt-01-intro",
-  "chatgpt-02-interface",
-  "chatgpt-03-prompt",
-  "chatgpt-04-contexte",
-  "chatgpt-05-format",
-] as const;
+import { moduleLessonIds } from "@/lib/training/catalog";
+
+export const module1LessonIds = moduleLessonIds[1];
 
 export type Module1LessonId = (typeof module1LessonIds)[number];
 
