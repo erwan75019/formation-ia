@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
+import {
+  getPriceIdForPlan,
+  type SubscriptionPlan,
+} from "@/lib/stripe/plans";
 import { createClient } from "@/lib/supabase/server";
-
-type PlanId = "fondamentaux" | "complet";
-
-function getPriceId(plan: PlanId) {
-  if (plan === "fondamentaux") {
-    return process.env.STRIPE_PRICE_FONDAMENTAUX;
-  }
-
-  return process.env.STRIPE_PRICE_COMPLET;
-}
 
 export async function POST(request: Request) {
   try {
@@ -33,7 +27,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    const plan = body.plan as PlanId;
+    const plan = body.plan as SubscriptionPlan;
 
     if (
       plan !== "fondamentaux" &&
@@ -49,56 +43,95 @@ export async function POST(request: Request) {
       );
     }
 
-    const priceId = getPriceId(plan);
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select(
+        "stripe_customer_id, stripe_subscription_id, subscription_status"
+      )
+      .eq("id", user.id)
+      .single();
 
-    if (!priceId) {
+    if (profileError) {
       return NextResponse.json(
-        {
-          error: "Price ID Stripe manquant.",
-        },
-        {
-          status: 500,
-        }
+        { error: "Profil utilisateur introuvable." },
+        { status: 500 }
       );
     }
+
+    if (
+      profile.subscription_status === "active" ||
+      profile.subscription_status === "trialing"
+    ) {
+      return NextResponse.json(
+        { error: "Un abonnement actif existe déjà pour ce compte." },
+        { status: 409 }
+      );
+    }
+
+    const priceId = getPriceIdForPlan(plan);
 
     const siteUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
       "http://localhost:3000";
 
-    const session =
-      await stripe.checkout.sessions.create({
-        mode: "subscription",
+    const customer = profile.stripe_customer_id;
 
-        customer_email: user.email,
+    if (customer) {
+      const subscriptions = await stripe.subscriptions.list({
+        customer,
+        status: "all",
+        limit: 100,
+      });
+      const hasConcurrentSubscription = subscriptions.data.some(
+        (subscription) =>
+          subscription.status === "active" ||
+          subscription.status === "trialing"
+      );
 
-        line_items: [
-          {
-            price: priceId,
-            quantity: 1,
-          },
-        ],
+      if (hasConcurrentSubscription) {
+        return NextResponse.json(
+          { error: "Un abonnement Stripe actif existe déjà." },
+          { status: 409 }
+        );
+      }
+    }
 
-        success_url:
-          `${siteUrl}/abonnement/succes?session_id={CHECKOUT_SESSION_ID}`,
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
 
-        cancel_url:
-          `${siteUrl}/abonnement/annule`,
+      client_reference_id: user.id,
 
+      ...(customer
+        ? { customer }
+        : { customer_email: user.email }),
+
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+
+      success_url:
+        `${siteUrl}/abonnement/succes?session_id={CHECKOUT_SESSION_ID}`,
+
+      cancel_url:
+        `${siteUrl}/abonnement/annule`,
+
+      metadata: {
+        user_id: user.id,
+        plan,
+      },
+
+      subscription_data: {
         metadata: {
           user_id: user.id,
           plan,
         },
+      },
 
-        subscription_data: {
-          metadata: {
-            user_id: user.id,
-            plan,
-          },
-        },
-
-        allow_promotion_codes: true,
-      });
+      allow_promotion_codes: true,
+    });
 
     if (!session.url) {
       return NextResponse.json(
