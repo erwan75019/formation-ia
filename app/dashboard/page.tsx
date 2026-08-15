@@ -7,7 +7,7 @@ import LogoutButton from "@/components/LogoutButton";
 // TYPES
 // ======================================================
 
-type Plan = "starter" | "pro" | "expert";
+type Plan = "fondamentaux" | "complet";
 
 type ModuleConfig = {
   number: number;
@@ -233,15 +233,13 @@ const modulesConfig: ModuleConfig[] = [
 // ======================================================
 
 const planLimits: Record<Plan, number> = {
-  starter: 5,
-  pro: 11,
-  expert: 12,
+  fondamentaux: 5,
+  complet: 12,
 };
 
 const planLabels: Record<Plan, string> = {
-  starter: "Starter",
-  pro: "Pro",
-  expert: "Expert",
+  fondamentaux: "Fondamentaux",
+  complet: "Parcours complet",
 };
 
 // ======================================================
@@ -291,19 +289,28 @@ export default async function Dashboard() {
 
   const rawPlan = profile?.plan;
 
-  const plan: Plan =
-    rawPlan === "pro" ||
-    rawPlan === "expert" ||
-    rawPlan === "starter"
-      ? rawPlan
-      : "starter";
-
-  const maxAccessibleModule =
-    planLimits[plan];
-
   const subscriptionStatus =
     profile?.subscription_status ??
     "inactive";
+
+  const plan: Plan | null =
+    rawPlan === "fondamentaux" ||
+    rawPlan === "complet"
+      ? rawPlan
+      : null;
+
+  const hasActiveSubscription =
+    subscriptionStatus === "active" ||
+    subscriptionStatus === "trialing";
+
+  const maxAccessibleModule =
+    hasActiveSubscription && plan
+      ? planLimits[plan]
+      : 0;
+
+  const planLabel = plan
+    ? planLabels[plan]
+    : "Aucune offre active";
 
   // ======================================================
   // PROGRESSION
@@ -734,7 +741,7 @@ export default async function Dashboard() {
             <div className="mt-3 flex items-center justify-between gap-3">
 
               <p className="text-xl font-bold">
-                {planLabels[plan]}
+                {planLabel}
               </p>
 
               <span
@@ -801,7 +808,7 @@ export default async function Dashboard() {
 
             </div>
 
-            {plan !== "expert" && (
+            {plan !== "complet" && (
               <Link
                 href="/tarifs"
                 className="mt-5 block rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-slate-950"
@@ -1019,7 +1026,7 @@ export default async function Dashboard() {
 
               <h2 className="mt-5 text-3xl font-bold">
                 Vous avez terminé tout le contenu disponible avec{" "}
-                {planLabels[plan]}
+                {planLabel}
               </h2>
 
               <p className="mt-4 max-w-2xl leading-7 text-slate-400">
@@ -1101,7 +1108,7 @@ export default async function Dashboard() {
               <div className="text-right">
 
                 <p className="text-sm font-semibold">
-                  Offre {planLabels[plan]}
+                  Offre {planLabel}
                 </p>
 
                 <p className="mt-1 text-xs text-slate-400">
@@ -1148,10 +1155,8 @@ export default async function Dashboard() {
                     }
                     requiredPlan={
                       module.number <= 5
-                        ? "Starter"
-                        : module.number <= 11
-                          ? "Pro"
-                          : "Expert"
+                        ? "Fondamentaux"
+                        : "Parcours complet"
                     }
                   />
 

@@ -89,7 +89,7 @@ export default async function FinalProjectPage() {
     error: profileError,
   } = await supabase
     .from("profiles")
-    .select("plan")
+    .select("plan, subscription_status")
     .eq("id", user.id)
     .single();
 
@@ -100,11 +100,12 @@ export default async function FinalProjectPage() {
     );
   }
 
-  const plan =
-    profile?.plan ?? "starter";
+  const hasCompleteAccess =
+    profile?.plan === "complet" &&
+    (profile.subscription_status === "active" ||
+      profile.subscription_status === "trialing");
 
-  // Projet final réservé à Expert
-  if (plan !== "expert") {
+  if (!hasCompleteAccess) {
     redirect("/tarifs");
   }
 
