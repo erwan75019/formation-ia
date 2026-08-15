@@ -308,7 +308,8 @@ export default async function Dashboard() {
       ? planLimits[plan]
       : 0;
 
-  const planLabel = plan
+  const planLabel =
+    hasActiveSubscription && plan
     ? planLabels[plan]
     : "Aucune offre active";
 
@@ -501,14 +502,42 @@ export default async function Dashboard() {
     );
 
   // ======================================================
-  // VALIDATIONS
+  // PROGRESSION DE L'OFFRE ACTIVE
   // ======================================================
 
-  const allValidationLessons =
-    modulesConfig.flatMap(
+  const accessibleModules =
+    moduleStates.filter(
+      (module) =>
+        module.number <=
+        maxAccessibleModule
+    );
+
+  const accessibleLessonIds =
+    accessibleModules.flatMap(
       (module) =>
         module.lessonIds
     );
+
+  const completedAccessibleLessons =
+    accessibleLessonIds.filter(
+      (lessonId) =>
+        completedLessonIds.has(
+          lessonId
+        )
+    ).length;
+
+  const planProgress =
+    accessibleLessonIds.length > 0
+      ? Math.round(
+          (completedAccessibleLessons /
+            accessibleLessonIds.length) *
+            100
+        )
+      : 0;
+
+  // ======================================================
+  // VALIDATIONS
+  // ======================================================
 
   const successfulValidationIds =
     new Set<string>();
@@ -519,7 +548,7 @@ export default async function Dashboard() {
         item.completed &&
         item.score !== null &&
         item.score >= 70 &&
-        allValidationLessons.includes(
+        accessibleLessonIds.includes(
           item.lesson_id
         )
       ) {
@@ -532,6 +561,9 @@ export default async function Dashboard() {
 
   if (
     legacyPromptQuiz &&
+    accessibleLessonIds.includes(
+      "chatgpt-03-prompt"
+    ) &&
     legacyPromptQuiz.score !==
       null &&
     legacyPromptQuiz.score >= 70
@@ -605,15 +637,10 @@ export default async function Dashboard() {
   // ======================================================
 
   const totalLessons =
-    allValidationLessons.length;
+    accessibleLessonIds.length;
 
   const totalCompletedLessons =
-    allValidationLessons.filter(
-      (lessonId) =>
-        completedLessonIds.has(
-          lessonId
-        )
-    ).length;
+    completedAccessibleLessons;
 
   const globalProgress =
     totalLessons > 0
@@ -637,45 +664,12 @@ export default async function Dashboard() {
     );
 
   const formationCompleted =
-    moduleStates.every(
+    hasActiveSubscription &&
+    accessibleModules.length > 0 &&
+    accessibleModules.every(
       (module) =>
         module.completed
     );
-
-  // ======================================================
-  // PROGRESSION DE L'OFFRE
-  // ======================================================
-
-  const accessibleModules =
-    moduleStates.filter(
-      (module) =>
-        module.number <=
-        maxAccessibleModule
-    );
-
-  const accessibleLessonIds =
-    accessibleModules.flatMap(
-      (module) =>
-        module.lessonIds
-    );
-
-  const completedAccessibleLessons =
-    accessibleLessonIds.filter(
-      (lessonId) =>
-        completedLessonIds.has(
-          lessonId
-        )
-    ).length;
-
-  const planProgress =
-    accessibleLessonIds.length >
-    0
-      ? Math.round(
-          (completedAccessibleLessons /
-            accessibleLessonIds.length) *
-            100
-        )
-      : 0;
 
   // ======================================================
   // NOM UTILISATEUR
@@ -772,13 +766,9 @@ export default async function Dashboard() {
             </div>
 
             <p className="mt-3 text-xs leading-5 text-slate-400">
-              Accès aux modules 01 à{" "}
-              {String(
-                maxAccessibleModule
-              ).padStart(
-                2,
-                "0"
-              )}
+              {hasActiveSubscription && plan
+                ? `Accès aux modules 01 à ${String(maxAccessibleModule).padStart(2, "0")}`
+                : "Choisissez une offre pour accéder au parcours."}
             </p>
 
             <div className="mt-5">
@@ -808,7 +798,8 @@ export default async function Dashboard() {
 
             </div>
 
-            {plan !== "complet" && (
+            {(!hasActiveSubscription ||
+              plan !== "complet") && (
               <Link
                 href="/tarifs"
                 className="mt-5 block rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-slate-950"
@@ -888,9 +879,13 @@ export default async function Dashboard() {
               </h1>
 
               <p className="mt-2 text-slate-500">
-                {formationCompleted
-                  ? "Vous avez terminé l’intégralité du parcours."
-                  : "Continuez votre progression en intelligence artificielle."}
+                {!hasActiveSubscription
+                  ? "Choisissez une offre pour commencer votre parcours."
+                  : formationCompleted
+                    ? plan === "fondamentaux"
+                      ? "Vous avez terminé le parcours Fondamentaux."
+                      : "Vous avez terminé l’intégralité du parcours."
+                    : "Continuez votre progression en intelligence artificielle."}
               </p>
 
             </div>
@@ -907,7 +902,32 @@ export default async function Dashboard() {
               MODULE ACTUEL
           ================================================== */}
 
-          {formationCompleted ? (
+          {!hasActiveSubscription ? (
+
+            <section className="mt-10 rounded-[30px] bg-slate-950 p-8 text-white shadow-xl md:p-10">
+
+              <p className="text-xs font-semibold tracking-[0.2em] text-slate-400">
+                OFFRE REQUISE
+              </p>
+
+              <h2 className="mt-5 text-3xl font-bold">
+                Choisissez votre parcours
+              </h2>
+
+              <p className="mt-4 max-w-2xl leading-7 text-slate-400">
+                Activez une offre pour accéder aux modules et suivre votre progression.
+              </p>
+
+              <Link
+                href="/tarifs"
+                className="mt-7 inline-block rounded-2xl bg-white px-6 py-4 font-semibold text-slate-950"
+              >
+                Voir les offres →
+              </Link>
+
+            </section>
+
+          ) : formationCompleted ? (
 
             <section className="mt-10 rounded-[30px] bg-slate-950 p-8 text-white shadow-xl md:p-10">
 
@@ -916,27 +936,32 @@ export default async function Dashboard() {
               </p>
 
               <h2 className="mt-5 text-4xl font-bold">
-                Parcours terminé 🎓
+                {plan === "fondamentaux"
+                  ? "Parcours Fondamentaux terminé"
+                  : "Parcours complet terminé"}{" "}
+                🎓
               </h2>
 
               <p className="mt-4 max-w-2xl leading-7 text-slate-400">
-                Vous avez validé les 12 modules et les{" "}
-                {totalLessons} leçons de AI Academy.
+                Vous avez validé les {accessibleModules.length} modules et les{" "}
+                {totalLessons} leçons de votre offre AI Academy.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
 
                 <span className="rounded-xl bg-slate-900 px-4 py-3 text-sm">
-                  ✓ 12 modules
+                  ✓ {accessibleModules.length} modules
                 </span>
 
                 <span className="rounded-xl bg-slate-900 px-4 py-3 text-sm">
                   ✓ {totalLessons} leçons
                 </span>
 
-                <span className="rounded-xl bg-slate-900 px-4 py-3 text-sm">
-                  ✓ Projet final
-                </span>
+                {plan === "complet" && (
+                  <span className="rounded-xl bg-slate-900 px-4 py-3 text-sm">
+                    ✓ Projet final
+                  </span>
+                )}
 
               </div>
 
@@ -1055,8 +1080,12 @@ export default async function Dashboard() {
 
             <StatCard
               value={`${globalProgress}%`}
-              label="Progression globale"
-              detail={`Sur les ${totalLessons} leçons`}
+              label="Progression de l’offre active"
+              detail={
+                hasActiveSubscription
+                  ? `Sur les ${totalLessons} leçons accessibles`
+                  : "Aucune offre active"
+              }
             />
 
             <StatCard
@@ -1108,17 +1137,15 @@ export default async function Dashboard() {
               <div className="text-right">
 
                 <p className="text-sm font-semibold">
-                  Offre {planLabel}
+                  {hasActiveSubscription
+                    ? `Offre ${planLabel}`
+                    : planLabel}
                 </p>
 
                 <p className="mt-1 text-xs text-slate-400">
-                  Modules 01 →{" "}
-                  {String(
-                    maxAccessibleModule
-                  ).padStart(
-                    2,
-                    "0"
-                  )}
+                  {hasActiveSubscription
+                    ? `Modules 01 → ${String(maxAccessibleModule).padStart(2, "0")}`
+                    : "Choisissez une offre"}
                 </p>
 
               </div>
@@ -1145,7 +1172,9 @@ export default async function Dashboard() {
                       module.description
                     }
                     progress={
-                      module.progressPercent
+                      module.planLocked
+                        ? 0
+                        : module.progressPercent
                     }
                     status={
                       module.status
