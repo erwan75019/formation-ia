@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isValidLessonCompletion } from "@/lib/training/catalog";
 
 // ======================================================
 // MODULE PRÉCÉDENT
@@ -105,7 +106,7 @@ export default async function FilesAIModulePage() {
         "lesson_progress"
       )
       .select(
-        "lesson_id, completed"
+        "lesson_id, completed, completed_at"
       )
       .eq(
         "user_id",
@@ -124,7 +125,7 @@ export default async function FilesAIModulePage() {
       progressData
         ?.filter(
           (item) =>
-            item.completed
+            isValidLessonCompletion(item)
         )
         .map(
           (item) =>

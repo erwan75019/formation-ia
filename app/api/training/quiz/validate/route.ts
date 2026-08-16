@@ -12,9 +12,9 @@ import {
 import {
   getSecureQuizByLessonId,
   isFundamentalsLessonId,
-  orderedObjectiveQuizLessonIds,
   type FundamentalsLessonId,
 } from "@/lib/training/quizzes/catalog";
+import { getPreviousOfficialLessonId } from "@/lib/training/catalog";
 
 type Progress = {
   completed: boolean | null;
@@ -29,7 +29,7 @@ function invalidRequest(message = "Requête invalide.") {
 async function readProgress(
   admin: ReturnType<typeof createAdminClient>,
   userId: string,
-  lessonId: FundamentalsLessonId
+  lessonId: string
 ) {
   return admin
     .from("lesson_progress")
@@ -237,10 +237,9 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
-  const lessonIndex = orderedObjectiveQuizLessonIds.indexOf(lessonId);
+  const previousLessonId = getPreviousOfficialLessonId(lessonId);
 
-  if (lessonIndex > 0) {
-    const previousLessonId = orderedObjectiveQuizLessonIds[lessonIndex - 1];
+  if (previousLessonId) {
     const { data: previousProgress, error: previousError } = await readProgress(
       admin,
       access.userId,
@@ -322,4 +321,3 @@ export async function POST(request: Request) {
     best_score: progress.score,
   });
 }
-

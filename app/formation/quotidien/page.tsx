@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isValidLessonCompletion } from "@/lib/training/catalog";
 
 // ======================================================
 // MODULE PRÉCÉDENT
@@ -79,7 +80,7 @@ export default async function DailyChatGPTModulePage() {
     error,
   } = await supabase
     .from("lesson_progress")
-    .select("lesson_id, completed")
+    .select("lesson_id, completed, completed_at")
     .eq("user_id", user.id);
 
   if (error) {
@@ -93,7 +94,7 @@ export default async function DailyChatGPTModulePage() {
     progressData
       ?.filter(
         (item) =>
-          item.completed
+          isValidLessonCompletion(item)
       )
       .map(
         (item) =>

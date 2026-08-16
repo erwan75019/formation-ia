@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isValidLessonCompletion } from "@/lib/training/catalog";
 
 // ======================================================
 // MODULE 05 — PRÉREQUIS
@@ -231,7 +232,7 @@ export default async function WebModulePage() {
   const { data: progressData, error: progressError } =
     await supabase
       .from("lesson_progress")
-      .select("lesson_id, completed")
+      .select("lesson_id, completed, completed_at")
       .eq("user_id", user.id);
 
   if (progressError) {
@@ -243,7 +244,7 @@ export default async function WebModulePage() {
 
   const completedIds = new Set(
     progressData
-      ?.filter((item) => item.completed)
+      ?.filter((item) => isValidLessonCompletion(item))
       .map((item) => item.lesson_id) ?? []
   );
 

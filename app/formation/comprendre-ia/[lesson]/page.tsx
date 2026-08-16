@@ -4,6 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import FileExplorerLab from "@/components/formation/FileExplorerLab";
 import FileIntroPractice from "@/components/formation/FileIntroPractice";
 import Module04PracticeLab from "@/components/formation/Module04PracticeLab";
+import ProjectValidationNotice from "@/components/formation/projects/ProjectValidationNotice";
+import {
+  getPreviousOfficialLessonId,
+  isValidLessonCompletion,
+} from "@/lib/training/catalog";
 
 const lessons = [
   {
@@ -90,7 +95,7 @@ export default async function UnderstandAILessonPage({
   const { data: progressData, error: progressError } =
     await supabase
       .from("lesson_progress")
-      .select("lesson_id, completed, score")
+      .select("lesson_id, completed, completed_at, score")
       .eq("user_id", user.id);
 
   if (progressError) {
@@ -102,7 +107,7 @@ export default async function UnderstandAILessonPage({
 
   const completedIds = new Set(
     progressData
-      ?.filter((item) => item.completed)
+      ?.filter((item) => isValidLessonCompletion(item))
       .map((item) => item.lesson_id) ?? []
   );
 
@@ -110,15 +115,10 @@ export default async function UnderstandAILessonPage({
     (item) => item.id === lesson.id
   );
 
-  const previousLesson =
-    currentIndex > 0
-      ? lessons[currentIndex - 1]
-      : null;
+  const previousLessonId = getPreviousOfficialLessonId(lesson.id);
 
   const allowed =
-    currentIndex === 0 ||
-    previousLesson === null ||
-    completedIds.has(previousLesson.id);
+    previousLessonId === null || completedIds.has(previousLessonId);
 
   if (!allowed) {
     redirect("/formation/comprendre-ia");
@@ -333,6 +333,9 @@ export default async function UnderstandAILessonPage({
             </div>
 
             {/* QCM */}
+            {lesson.id === "fichiers-06-projet" ? (
+              <ProjectValidationNotice completed={lessonCompleted} />
+            ) : (
             <div className="rounded-[26px] bg-slate-950 p-8 text-white shadow-xl">
 
               <p className="text-xs font-semibold tracking-[0.2em] text-slate-400">
@@ -358,6 +361,7 @@ export default async function UnderstandAILessonPage({
               </Link>
 
             </div>
+            )}
 
             {/* SUIVANTE */}
             {lessonCompleted && (

@@ -247,3 +247,28 @@ export const planLessonTotals: Record<TrainingPlan, number> = {
   fondamentaux: planLessonIds.fondamentaux.length,
   complet: planLessonIds.complet.length,
 };
+
+export type LessonCompletion = {
+  lesson_id: string;
+  completed: boolean | null;
+  completed_at: string | null;
+};
+
+export function isValidLessonCompletion(
+  progress: LessonCompletion,
+  lessonId: string = progress.lesson_id
+) {
+  return (
+    progress.lesson_id === lessonId &&
+    progress.completed === true &&
+    typeof progress.completed_at === "string" &&
+    progress.completed_at.length > 0
+  );
+}
+
+export function getPreviousOfficialLessonId(
+  lessonId: string
+): OfficialLessonId | null {
+  const index = (planLessonIds.complet as readonly string[]).indexOf(lessonId);
+  return index > 0 ? planLessonIds.complet[index - 1] : null;
+}

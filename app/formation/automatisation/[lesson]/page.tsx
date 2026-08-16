@@ -2,6 +2,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AutomationPractice from "@/components/formation/AutomationPractice";
+import ProjectValidationNotice from "@/components/formation/projects/ProjectValidationNotice";
+import {
+  getPreviousOfficialLessonId,
+  isValidLessonCompletion,
+} from "@/lib/training/catalog";
 
 // ======================================================
 // LEÇONS DU MODULE 05
@@ -113,7 +118,7 @@ export default async function AutomationLessonPage({
     error: progressError,
   } = await supabase
     .from("lesson_progress")
-    .select("lesson_id, completed, score")
+    .select("lesson_id, completed, completed_at, score")
     .eq("user_id", user.id);
 
   if (progressError) {
@@ -125,7 +130,7 @@ export default async function AutomationLessonPage({
 
   const completedIds = new Set(
     progressData
-      ?.filter((item) => item.completed)
+      ?.filter((item) => isValidLessonCompletion(item))
       .map((item) => item.lesson_id) ?? []
   );
 
@@ -137,15 +142,10 @@ export default async function AutomationLessonPage({
     (item) => item.id === lesson.id
   );
 
-  const previousLesson =
-    currentIndex > 0
-      ? lessons[currentIndex - 1]
-      : null;
+  const previousLessonId = getPreviousOfficialLessonId(lesson.id);
 
   const allowed =
-    currentIndex === 0 ||
-    previousLesson === null ||
-    completedIds.has(previousLesson.id);
+    previousLessonId === null || completedIds.has(previousLessonId);
 
   if (!allowed) {
     redirect("/formation/automatisation");
@@ -441,6 +441,9 @@ export default async function AutomationLessonPage({
                 VALIDATION
             ================================================ */}
 
+            {lesson.id === "automation-07-project" ? (
+              <ProjectValidationNotice completed={lessonCompleted} />
+            ) : (
             <section className="rounded-[26px] border border-slate-200 bg-white p-8 shadow-sm">
 
               <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
@@ -478,6 +481,7 @@ export default async function AutomationLessonPage({
               </div>
 
             </section>
+            )}
 
             {/* ================================================
                 NAVIGATION APRÈS VALIDATION

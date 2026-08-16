@@ -7,6 +7,11 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 import PracticalExercise from "@/components/formation/PracticalExercise";
+import ProjectValidationNotice from "@/components/formation/projects/ProjectValidationNotice";
+import {
+  getPreviousOfficialLessonId,
+  isValidLessonCompletion,
+} from "@/lib/training/catalog";
 
 // ======================================================
 // TYPES
@@ -166,7 +171,7 @@ export default async function DailyLessonPage({
         "lesson_progress"
       )
       .select(
-        "lesson_id, completed, score"
+        "lesson_id, completed, completed_at, score"
       )
       .eq(
         "user_id",
@@ -187,7 +192,7 @@ export default async function DailyLessonPage({
       progressData
         ?.filter(
           (item) =>
-            item.completed
+            isValidLessonCompletion(item)
         )
         .map(
           (item) =>
@@ -206,20 +211,10 @@ export default async function DailyLessonPage({
         lesson.id
     );
 
-  const previousLesson =
-    currentIndex > 0
-      ? lessons[
-          currentIndex - 1
-        ]
-      : null;
+  const previousLessonId = getPreviousOfficialLessonId(lesson.id);
 
   const allowed =
-    currentIndex === 0 ||
-    previousLesson ===
-      null ||
-    completedIds.has(
-      previousLesson.id
-    );
+    previousLessonId === null || completedIds.has(previousLessonId);
 
   if (!allowed) {
     redirect(
@@ -548,6 +543,9 @@ export default async function DailyLessonPage({
                 QUIZ
             ================================================== */}
 
+            {lesson.id === "quotidien-05-mission" ? (
+              <ProjectValidationNotice completed={lessonCompleted} />
+            ) : (
             <section className="rounded-[26px] border border-slate-200 bg-white p-8 shadow-sm">
 
               <p className="text-xs font-semibold tracking-[0.2em] text-slate-400">
@@ -578,6 +576,7 @@ export default async function DailyLessonPage({
               </Link>
 
             </section>
+            )}
 
             {/* ==================================================
                 NEXT
