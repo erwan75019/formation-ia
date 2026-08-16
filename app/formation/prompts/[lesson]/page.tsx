@@ -12,6 +12,7 @@ import StudentRoleLab from "@/components/formation/prompts/StudentRoleLab";
 import PromptTemplateLab from "@/components/formation/prompts/PromptTemplateLab";
 import IterationLab from "@/components/formation/prompts/IterationLab";
 import FinalMissionLab from "@/components/formation/prompts/FinalMissionLab";
+import ProjectValidationNotice from "@/components/formation/projects/ProjectValidationNotice";
 
 const lessons = [
   {
@@ -431,6 +432,9 @@ export default async function PromptLessonPage({
 
             {/* QUIZ */}
 
+            {lesson.id === "prompts-05-project" ? (
+              <ProjectValidationNotice completed={lessonCompleted} />
+            ) : (
             <section className="rounded-[26px] border border-slate-200 bg-white p-8 shadow-sm">
 
               <p className="text-xs font-semibold tracking-[0.2em] text-slate-400">
@@ -459,6 +463,7 @@ export default async function PromptLessonPage({
               </Link>
 
             </section>
+            )}
 
             {/* NAVIGATION */}
 

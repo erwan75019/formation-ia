@@ -5,6 +5,8 @@ import {
   useState,
 } from "react";
 
+import SecureProjectEvaluation from "@/components/formation/projects/SecureProjectEvaluation";
+
 // ======================================================
 // TYPES
 // ======================================================
@@ -893,7 +895,7 @@ export default function PracticalExercise({
             EVALUATE BUTTON
         ================================================== */}
 
-        <button
+        {lessonId !== "quotidien-05-mission" && <button
           type="button"
           disabled={
             !canEvaluate ||
@@ -913,7 +915,15 @@ export default function PracticalExercise({
                 100
             ? `Complétez toutes les sections (${completedFieldCount}/${fields.length})`
             : "Faire évaluer mon livrable →"}
-        </button>
+        </button>}
+
+        {lessonId === "quotidien-05-mission" && (
+          <SecureProjectEvaluation
+            lessonId="quotidien-05-mission"
+            ready={canEvaluate}
+            work={answersForEvaluation}
+          />
+        )}
 
         {/* ERROR */}
 

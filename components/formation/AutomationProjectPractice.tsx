@@ -5,27 +5,11 @@ import { useMemo, useState } from "react";
 import AutomationInbox, {
   type TrainingEmail,
 } from "@/components/formation/AutomationInbox";
+import SecureProjectEvaluation from "@/components/formation/projects/SecureProjectEvaluation";
 
 // ======================================================
 // TYPES
 // ======================================================
-
-type EvaluationFunction = (
-  title: string,
-  mission: string,
-  answers: Record<string, string>,
-  criteria: {
-    name: string;
-    maxScore: number;
-    description: string;
-  }[],
-  context?: string
-) => Promise<void>;
-
-type Props = {
-  evaluate: EvaluationFunction;
-  evaluating: boolean;
-};
 
 type Permission =
   | "AUTO"
@@ -69,10 +53,7 @@ type ActionRule = {
 // COMPOSANT
 // ======================================================
 
-export default function AutomationProjectPractice({
-  evaluate,
-  evaluating,
-}: Props) {
+export default function AutomationProjectPractice() {
   // ====================================================
   // PROJET
   // ====================================================
@@ -1373,176 +1354,30 @@ ${firstAction.action}
             ÉVALUATION
         ================================================== */}
 
-        {readyForEvaluation && (
-          <button
-            type="button"
-            disabled={
-              evaluating
-            }
-            onClick={() =>
-              evaluate(
-                "Projet final — Construire un assistant métier IA",
-
-                "Concevoir, configurer et tester un assistant métier capable de comprendre une demande, utiliser une IA, choisir une action et respecter une politique de sécurité.",
-
-                {
-                  "Nom du projet":
-                    projectName,
-
-                  "Utilisateur cible":
-                    targetUser,
-
-                  Problème:
-                    problem,
-
-                  Déclencheur:
-                    trigger,
-
-                  Catégories:
-                    categories,
-
-                  "Données à extraire":
-                    dataToExtract,
-
-                  Actions:
-                    JSON.stringify(
-                      actions
-                    ),
-
-                  "Seuil de confiance":
-                    `${confidenceThreshold}%`,
-
-                  "Gestion de l'incertitude":
-                    fallback,
-
-                  "Valeur utilisateur":
-                    value,
-
-                  "Email testé":
-                    selectedEmail?.subject ??
-                    "",
-
-                  Extraction:
-                    JSON.stringify(
-                      extraction
-                    ),
-
-                  "Action choisie":
-                    selectedAction,
-
-                  "Décision humaine":
-                    humanDecision ||
-                    "Non nécessaire",
-
-                  Historique:
-                    logs.join(
-                      " | "
-                    ),
-                },
-
-                [
-                  {
-                    name:
-                      "Problème et valeur",
-
-                    maxScore: 15,
-
-                    description:
-                      "Le projet répond à un besoin réel et apporte un bénéfice concret.",
-                  },
-
-                  {
-                    name:
-                      "Architecture",
-
-                    maxScore: 20,
-
-                    description:
-                      "Le déclencheur, la compréhension, les données et les actions forment un système cohérent.",
-                  },
-
-                  {
-                    name:
-                      "Utilisation de l'IA",
-
-                    maxScore: 20,
-
-                    description:
-                      "L'IA est utilisée pour comprendre ou générer là où elle apporte une vraie valeur.",
-                  },
-
-                  {
-                    name:
-                      "Sécurité",
-
-                    maxScore: 20,
-
-                    description:
-                      "Les permissions et seuils empêchent les actions risquées d'être exécutées sans contrôle.",
-                  },
-
-                  {
-                    name:
-                      "Test et robustesse",
-
-                    maxScore: 15,
-
-                    description:
-                      "Le projet a été réellement testé et sait gérer l'incertitude.",
-                  },
-
-                  {
-                    name:
-                      "Potentiel produit",
-
-                    maxScore: 10,
-
-                    description:
-                      "L'assistant pourrait évoluer vers un produit ou service réellement utilisable.",
-                  },
-                ],
-
-                JSON.stringify({
-                  project: {
-                    projectName,
-                    targetUser,
-                    problem,
-                    trigger,
-                    categories,
-                    dataToExtract,
-                    actions,
-                    confidenceThreshold,
-                    fallback,
-                    value,
-                  },
-
-                  test: {
-                    email:
-                      selectedEmail,
-
-                    extraction,
-
-                    generated,
-
-                    selectedAction,
-
-                    humanDecision,
-
-                    logs,
-                  },
-
-                  principle:
-                    "Évaluer l'ensemble comme un prototype fonctionnel et non comme une simple description théorique.",
-                })
-              )
-            }
-            className="mt-8 w-full rounded-2xl bg-slate-950 px-6 py-5 text-lg font-semibold text-white disabled:opacity-50"
-          >
-            {evaluating
-              ? "Évaluation de votre projet..."
-              : "Évaluer mon projet final /100 →"}
-          </button>
-        )}
+        <SecureProjectEvaluation
+          lessonId="automation-07-project"
+          ready={readyForEvaluation}
+          work={{
+              project_name: projectName,
+              target_user: targetUser,
+              problem,
+              trigger,
+              categories,
+              data_to_extract: dataToExtract,
+              actions: JSON.stringify(actions),
+              confidence_policy: `Seuil de confiance : ${confidenceThreshold} %.`,
+              fallback,
+              value,
+              test_evidence: JSON.stringify({
+                email: selectedEmail?.subject,
+                extraction,
+                generated,
+                selectedAction,
+                humanDecision: humanDecision || "Non nécessaire",
+              }),
+              execution_log: logs.join(" | "),
+          }}
+        />
 
       </div>
 

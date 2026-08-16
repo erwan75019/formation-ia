@@ -16,9 +16,6 @@ type ProjectPayload = {
   prompt?: string;
   output?: string;
 
-  score?: number | null;
-  level?: string;
-
   clientValue?: string;
   nextStep?: string;
 };
@@ -158,8 +155,30 @@ export async function POST(
       );
     }
 
-    const body =
-      (await request.json()) as ProjectPayload;
+    const parsedBody: unknown = await request.json();
+
+    if (
+      typeof parsedBody !== "object" ||
+      parsedBody === null ||
+      Array.isArray(parsedBody)
+    ) {
+      return NextResponse.json({ error: "Brouillon invalide." }, { status: 400 });
+    }
+
+    const body = parsedBody as ProjectPayload;
+
+    if (
+      Object.prototype.hasOwnProperty.call(body, "score") ||
+      Object.prototype.hasOwnProperty.call(body, "level") ||
+      Object.prototype.hasOwnProperty.call(body, "completed") ||
+      Object.prototype.hasOwnProperty.call(body, "completed_at") ||
+      Object.prototype.hasOwnProperty.call(body, "user_id")
+    ) {
+      return NextResponse.json(
+        { error: "Le brouillon ne peut contenir aucune donnée de validation." },
+        { status: 400 }
+      );
+    }
 
     const moduleId =
       body.moduleId?.trim();
@@ -185,23 +204,6 @@ export async function POST(
         }
       );
     }
-
-    const rawScore =
-      body.score;
-
-    const score =
-      typeof rawScore ===
-        "number"
-        ? Math.max(
-            0,
-            Math.min(
-              100,
-              Math.round(
-                rawScore
-              )
-            )
-          )
-        : null;
 
     const projectData = {
       user_id:
@@ -237,12 +239,6 @@ export async function POST(
 
       output:
         body.output?.trim() ||
-        null,
-
-      score,
-
-      level:
-        body.level?.trim() ||
         null,
 
       client_value:

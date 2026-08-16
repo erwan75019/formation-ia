@@ -6,6 +6,8 @@ import {
   useState,
 } from "react";
 
+import SecureProjectEvaluation from "@/components/formation/projects/SecureProjectEvaluation";
+
 type Row = Record<string, string>;
 
 type Evaluation = {
@@ -1218,7 +1220,7 @@ Nombre de lignes: ${props.rows.length}`,
           >
             {!amountHeader ? (
               <p className="rounded-2xl bg-slate-100 p-5 text-sm leading-6">
-                Aucune colonne de montant n'a été reconnue. Essayez un
+                Aucune colonne de montant n&apos;a été reconnue. Essayez un
                 fichier contenant une colonne « montant », « prix » ou
                 « total ».
               </p>
@@ -1551,10 +1553,6 @@ function PersonalProjectLab(props: SharedProps) {
   const [rules, setRules] = useState("");
   const [dashboardPlan, setDashboardPlan] = useState("");
   const [routine, setRoutine] = useState("");
-  const [evaluation, setEvaluation] =
-    useState<Evaluation | null>(null);
-  const [evaluating, setEvaluating] = useState(false);
-  const [localError, setLocalError] = useState("");
 
   const completed = [
     projectName,
@@ -1566,71 +1564,6 @@ function PersonalProjectLab(props: SharedProps) {
   ].filter((value) => value.trim()).length;
 
   const percentage = Math.round((completed / 6) * 100);
-
-  async function runEvaluation() {
-    setEvaluating(true);
-    setLocalError("");
-
-    try {
-      const result = await evaluateMission({
-        lessonId: "fichiers-06-projet",
-        title: "Projet personnel réutilisable",
-        mission:
-          "Concevoir un outil personnel fondé sur ses propres informations et une méthode fiable.",
-        context: `Fichier: ${props.fileName}
-Colonnes: ${props.headers.join(", ")}
-Nombre de lignes: ${props.rows.length}`,
-        answers: {
-          "Nom du projet": projectName,
-          "Besoin réel": need,
-          "Questions auxquelles l'outil doit répondre": questions,
-          "Règles de fiabilité": rules,
-          "Plan du tableau de bord": dashboardPlan,
-          "Routine de réutilisation": routine,
-        },
-        criteria: [
-          {
-            name: "Utilité réelle",
-            maxScore: 20,
-            description:
-              "Le projet répond à un besoin personnel, étudiant ou professionnel concret.",
-          },
-          {
-            name: "Questions utiles",
-            maxScore: 20,
-            description:
-              "L'outil doit répondre à des questions claires et actionnables.",
-          },
-          {
-            name: "Fiabilité",
-            maxScore: 20,
-            description:
-              "Le projet prévoit les données manquantes, incohérences et vérifications.",
-          },
-          {
-            name: "Dashboard",
-            maxScore: 20,
-            description:
-              "La restitution prévue montre l'essentiel sans surcharge.",
-          },
-          {
-            name: "Réutilisation",
-            maxScore: 20,
-            description:
-              "L'apprenant sait comment mettre à jour et réutiliser son outil après la formation.",
-          },
-        ],
-      });
-
-      setEvaluation(result);
-    } catch (err) {
-      setLocalError(
-        err instanceof Error ? err.message : "Erreur."
-      );
-    } finally {
-      setEvaluating(false);
-    }
-  }
 
   return (
     <LabShell
@@ -1736,24 +1669,19 @@ Nombre de lignes: ${props.rows.length}`,
               rows={5}
             />
 
-            <button
-              type="button"
-              onClick={runEvaluation}
-              disabled={percentage < 100 || evaluating}
-              className="mt-6 w-full rounded-2xl bg-slate-950 px-6 py-4 font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400"
-            >
-              {evaluating
-                ? "Évaluation du projet..."
-                : "Évaluer mon projet final /100 →"}
-            </button>
-
-            {localError && (
-              <p className="mt-4 text-sm">{localError}</p>
-            )}
-
-            {evaluation && (
-              <EvaluationPanel evaluation={evaluation} />
-            )}
+            <SecureProjectEvaluation
+              lessonId="fichiers-06-projet"
+              ready={percentage === 100}
+              work={{
+                project_name: projectName,
+                need,
+                questions,
+                reliability_rules: rules,
+                dashboard_plan: dashboardPlan,
+                reuse_routine: routine,
+                dataset_context: `Fichier : ${props.fileName}. Colonnes : ${props.headers.join(", ")}. Nombre de lignes : ${props.rows.length}.`,
+              }}
+            />
           </Step>
         </>
       )}

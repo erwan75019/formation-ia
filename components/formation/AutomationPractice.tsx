@@ -113,44 +113,6 @@ type SecurityScenario = {
 };
 
 // ======================================================
-// EMAILS SIMPLES
-// ======================================================
-
-const sampleEmails = [
-  {
-    id: "A",
-    from: "marie@client.fr",
-    subject: "Facture de juillet",
-    body:
-      "Bonjour, je n'ai toujours pas reçu la facture de juillet pour notre abonnement. Pouvez-vous me la transmettre avant vendredi ? Merci.",
-  },
-
-  {
-    id: "B",
-    from: "lucas@prospect.fr",
-    subject: "Demande de tarif",
-    body:
-      "Bonjour, nous sommes une équipe de 12 personnes et nous aimerions connaître vos tarifs ainsi que les délais de mise en place.",
-  },
-
-  {
-    id: "C",
-    from: "client@example.fr",
-    subject: "Problème de paiement",
-    body:
-      "Bonjour, j'ai été débité deux fois de 89 € aujourd'hui. Pouvez-vous vérifier rapidement ? Numéro de commande CMD-4821.",
-  },
-
-  {
-    id: "D",
-    from: "newsletter@example.fr",
-    subject: "Découvrez nos nouveautés",
-    body:
-      "Profitez de notre sélection de nouveautés et découvrez nos dernières actualités.",
-  },
-];
-
-// ======================================================
 // COMPOSANT PRINCIPAL
 // ======================================================
 
@@ -279,10 +241,7 @@ export default function AutomationPractice({
       )}
 
       {lesson === "07" && (
-        <AutomationProjectPractice
-          evaluate={evaluate}
-          evaluating={evaluating}
-        />
+        <AutomationProjectPractice />
       )}
 
       {evaluation && (

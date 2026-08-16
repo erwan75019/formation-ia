@@ -2,6 +2,12 @@
 
 import Link from "next/link";
 
+import SecureProjectEvaluation from "@/components/formation/projects/SecureProjectEvaluation";
+import {
+  promptsProjectFields,
+  type PublicProjectField,
+} from "@/lib/training/projects/catalog";
+
 import {
   FormEvent,
   useEffect,
@@ -229,6 +235,29 @@ export default function FinalMissionLab() {
         "\n\n"
       );
   }
+
+  const projectWork = {
+    interview: conversationText(),
+    solution,
+    prompt,
+    output,
+  };
+
+  const projectReady = promptsProjectFields.every((field) => {
+    const length = projectWork[field.key].trim().length;
+    return length >= field.minLength && length <= field.maxLength;
+  });
+
+  const projectBlockingMessages = promptsProjectFields.flatMap((field) => {
+    const length = projectWork[field.key].trim().length;
+    if (length < field.minLength) {
+      return [`${field.label} : ${length}/${field.minLength} caractères.`];
+    }
+    if (length > field.maxLength) {
+      return [`${field.label} : maximum ${field.maxLength} caractères dépassé.`];
+    }
+    return [];
+  });
 
   async function sendClientMessage(
     event: FormEvent
@@ -465,12 +494,6 @@ export default function FinalMissionLab() {
                 prompt,
 
                 output,
-
-                score:
-                  finalEvaluation.globalScore,
-
-                level:
-                  finalEvaluation.level,
 
                 clientValue:
                   finalEvaluation.clientValue,
@@ -1036,6 +1059,11 @@ export default function FinalMissionLab() {
                 className="w-full resize-none rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 outline-none focus:border-slate-950"
               />
 
+              <FieldLengthStatus
+                field={promptsProjectFields[0]}
+                value={projectWork.interview}
+              />
+
               <div className="mt-3 flex flex-wrap justify-between gap-3">
 
                 <button
@@ -1117,8 +1145,14 @@ export default function FinalMissionLab() {
               )
             }
             rows={12}
+            maxLength={promptsProjectFields[1].maxLength}
             placeholder="Décrivez votre solution..."
             className="mt-7 w-full resize-y rounded-[24px] border border-slate-200 p-5 text-sm leading-7 outline-none focus:border-slate-950"
+          />
+
+          <FieldLengthStatus
+            field={promptsProjectFields[1]}
+            value={solution}
           />
 
           <div className="mt-6 flex flex-wrap gap-3">
@@ -1138,7 +1172,7 @@ export default function FinalMissionLab() {
             <button
               type="button"
               disabled={
-                !solution.trim()
+                solution.trim().length < promptsProjectFields[1].minLength
               }
               onClick={() =>
                 setPhase(
@@ -1195,6 +1229,7 @@ export default function FinalMissionLab() {
               );
             }}
             rows={18}
+            maxLength={promptsProjectFields[2].maxLength}
             placeholder={`Écrivez votre prompt...
 
 OBJECTIF
@@ -1212,6 +1247,11 @@ RÈGLES
 FORMAT
 ...`}
             className="mt-7 w-full resize-y rounded-[24px] border border-slate-800 bg-slate-950 p-6 font-mono text-sm leading-7 text-slate-200 outline-none"
+          />
+
+          <FieldLengthStatus
+            field={promptsProjectFields[2]}
+            value={prompt}
           />
 
           {error && (
@@ -1239,7 +1279,7 @@ FORMAT
             <button
               type="button"
               disabled={
-                !prompt.trim() ||
+                prompt.trim().length < promptsProjectFields[2].minLength ||
                 loading
               }
               onClick={
@@ -1319,6 +1359,12 @@ FORMAT
               <p className="mt-6 whitespace-pre-line text-sm leading-8 text-slate-200">
                 {output}
               </p>
+
+              <FieldLengthStatus
+                field={promptsProjectFields[3]}
+                value={output}
+                dark
+              />
 
             </div>
 
@@ -1794,7 +1840,41 @@ FORMAT
         </div>
       )}
 
+      <div className="p-6 md:p-8">
+        <SecureProjectEvaluation
+          lessonId="prompts-05-project"
+          ready={projectReady}
+          blockingMessages={projectBlockingMessages}
+          work={projectWork}
+        />
+      </div>
+
     </section>
+  );
+}
+
+function FieldLengthStatus({
+  field,
+  value,
+  dark = false,
+}: {
+  field: PublicProjectField;
+  value: string;
+  dark?: boolean;
+}) {
+  const length = value.trim().length;
+  const tooShort = length < field.minLength;
+  const tooLong = length > field.maxLength;
+
+  return (
+    <div className={`mt-2 flex flex-wrap justify-between gap-2 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
+      <span>Minimum attendu : {field.minLength} caractères.</span>
+      <span className={tooShort || tooLong ? "font-semibold text-amber-600" : "font-semibold text-emerald-600"}>
+        {length} / {field.minLength} caractères
+        {tooShort ? ` — ${field.label} est trop court.` : ""}
+        {tooLong ? ` — ${field.label} dépasse ${field.maxLength} caractères.` : ""}
+      </span>
+    </div>
   );
 }
 

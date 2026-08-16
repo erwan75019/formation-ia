@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Quiz = {
   lessonId: string;
@@ -42,8 +42,13 @@ export default function SecureQuizExercise({
   const [answers, setAnswers] = useState<number[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<ValidationResult | null>(null);
-  const [projectPending, setProjectPending] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (quiz?.validation === "project_pending") {
+      router.replace(`${lessonHref}#evaluation-projet`);
+    }
+  }, [lessonHref, quiz?.validation, router]);
 
   if (!quiz) {
     return (
@@ -63,7 +68,7 @@ export default function SecureQuizExercise({
 
   async function submitAnswers(finalAnswers: number[]) {
     if (quiz?.validation === "project_pending") {
-      setProjectPending(true);
+      router.replace(`${lessonHref}#evaluation-projet`);
       return;
     }
 
@@ -117,30 +122,15 @@ export default function SecureQuizExercise({
     setSelectedAnswer(null);
     setAnswers([]);
     setResult(null);
-    setProjectPending(false);
     setError("");
   }
 
-  if (projectPending) {
+  if (quiz.validation === "project_pending") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f5f7fb] px-6 py-10">
-        <section className="w-full max-w-2xl rounded-[32px] border border-amber-200 bg-white p-10 text-center shadow-xl">
-          <p className="text-xs font-semibold tracking-[0.2em] text-amber-700">
-            PROJET OUVERT
-          </p>
-          <h1 className="mt-4 text-3xl font-bold">Validation sécurisée à venir</h1>
-          <p className="mt-5 leading-7 text-slate-600">
-            Vos réponses restent consultables dans cette session, mais ce projet
-            ne peut pas être validé automatiquement par un simple QCM. Sa preuve
-            de réalisation sera ajoutée pendant la phase dédiée aux projets.
-          </p>
-          <Link
-            href={lessonHref}
-            className="mt-8 inline-flex rounded-2xl bg-slate-950 px-6 py-4 font-semibold text-white"
-          >
-            Retour au projet
-          </Link>
-        </section>
+        <p className="text-sm font-medium text-slate-500">
+          Ouverture de l’interface officielle du projet…
+        </p>
       </main>
     );
   }
