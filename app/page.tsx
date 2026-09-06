@@ -201,7 +201,7 @@ export default function HomePage() {
       ====================================================== */}
 
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
 
           <Link href="/" className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-sm font-bold text-white">
@@ -213,7 +213,7 @@ export default function HomePage() {
                 AI Academy
               </p>
 
-              <p className="text-xs text-slate-400">
+              <p className="hidden text-xs text-slate-400 sm:block">
                 De l’IA aux produits réels
               </p>
             </div>
@@ -260,7 +260,7 @@ export default function HomePage() {
 
             <Link
               href="/inscription"
-              className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:scale-[1.02]"
+              className="shrink-0 rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:scale-[1.02] sm:px-5"
             >
               Commencer
             </Link>
@@ -280,14 +280,14 @@ export default function HomePage() {
 
           <div className="grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
 
-            <div>
+            <div className="min-w-0">
 
               <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
                 Formation IA progressive
               </div>
 
-              <h1 className="mt-7 max-w-4xl text-5xl font-bold leading-[1.05] tracking-tight md:text-7xl">
+              <h1 className="mt-7 max-w-4xl break-words text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl md:text-7xl">
                 Apprenez l’IA. Puis construisez de
 
                 <span className="text-slate-400">
@@ -322,7 +322,7 @@ export default function HomePage() {
 
               <div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-sm text-slate-500">
                 <span>✓ 12 modules</span>
-                <span>✓ 74 leçons</span>
+                <span>✓ 84 leçons</span>
                 <span>✓ Exercices & projets</span>
                 <span>✓ Progression enregistrée</span>
               </div>
@@ -395,7 +395,7 @@ export default function HomePage() {
                   <div className="mt-4 grid grid-cols-3 gap-3">
 
                     <MockStat
-                      value="74"
+                      value="84"
                       label="Leçons"
                     />
 

@@ -1,4 +1,10 @@
 import Link from "next/link";
+import PricingPlanAction from "@/components/subscription/PricingPlanAction";
+import { createClient } from "@/lib/supabase/server";
+import {
+  hasActiveSubscription,
+  isPricingPlan,
+} from "@/lib/subscription/pricing";
 
 // ======================================================
 // OFFRES
@@ -203,7 +209,25 @@ const faq = [
 // PAGE
 // ======================================================
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("plan, subscription_status")
+        .eq("id", user.id)
+        .maybeSingle()
+    : { data: null };
+
+  const activePlan = isPricingPlan(profile?.plan) ? profile.plan : null;
+  const subscriptionIsActive = hasActiveSubscription(
+    profile?.subscription_status
+  );
+
   return (
     <main className="min-h-screen bg-[#f5f6f8] text-slate-950">
 
@@ -265,19 +289,29 @@ export default function PricingPage() {
 
           <div className="flex items-center gap-3">
 
-            <Link
-              href="/connexion"
-              className="hidden rounded-xl px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 sm:block"
-            >
-              Se connecter
-            </Link>
-
-            <Link
-              href="/inscription"
-              className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:scale-[1.02]"
-            >
-              Commencer
-            </Link>
+            {user ? (
+              <Link
+                href="/dashboard"
+                className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:scale-[1.02]"
+              >
+                Mon espace
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/connexion"
+                  className="hidden rounded-xl px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 sm:block"
+                >
+                  Se connecter
+                </Link>
+                <Link
+                  href="/inscription"
+                  className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:scale-[1.02]"
+                >
+                  Commencer
+                </Link>
+              </>
+            )}
 
           </div>
 
@@ -344,7 +378,7 @@ export default function PricingPage() {
           OFFRES
       ====================================================== */}
 
-      <section className="bg-[#e9edf2]">
+      <section id="offres" className="scroll-mt-20 bg-[#e9edf2]">
 
         <div className="mx-auto max-w-7xl px-6 py-24">
 
@@ -460,20 +494,20 @@ export default function PricingPage() {
 
                 {/* CTA */}
 
-                <Link
-                  href={`/inscription?plan=${plan.id}`}
+                <PricingPlanAction
+                  plan={plan.id as "fondamentaux" | "complet"}
+                  authenticated={Boolean(user)}
+                  activePlan={activePlan}
+                  hasActiveSubscription={subscriptionIsActive}
                   className={`mt-10 block rounded-2xl px-6 py-5 text-center text-base font-bold transition hover:scale-[1.01] ${
                     plan.featured
                       ? "bg-white text-slate-950"
                       : "border border-slate-700 bg-[#111a2e] text-white hover:bg-slate-800"
                   }`}
-                >
-
-                  {plan.featured
+                  visitorLabel={plan.featured
                     ? "Choisir le Parcours complet →"
                     : "Choisir les Fondamentaux →"}
-
-                </Link>
+                />
 
               </div>
 
@@ -817,19 +851,23 @@ export default function PricingPage() {
 
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
 
-              <Link
-                href="/inscription?plan=complet"
+              <PricingPlanAction
+                plan="complet"
+                authenticated={Boolean(user)}
+                activePlan={activePlan}
+                hasActiveSubscription={subscriptionIsActive}
                 className="rounded-2xl bg-white px-7 py-4 font-semibold text-slate-950 transition hover:scale-[1.02]"
-              >
-                Choisir le Parcours complet →
-              </Link>
+                visitorLabel="Choisir le Parcours complet →"
+              />
 
-              <Link
-                href="/inscription?plan=fondamentaux"
+              <PricingPlanAction
+                plan="fondamentaux"
+                authenticated={Boolean(user)}
+                activePlan={activePlan}
+                hasActiveSubscription={subscriptionIsActive}
                 className="rounded-2xl border border-slate-700 px-7 py-4 font-semibold transition hover:bg-slate-900"
-              >
-                Choisir les Fondamentaux
-              </Link>
+                visitorLabel="Choisir les Fondamentaux"
+              />
 
             </div>
 

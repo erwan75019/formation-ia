@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
               />
 
               <InfoCard
-                value="74"
+                value="84"
                 label="Leçons"
               />
 

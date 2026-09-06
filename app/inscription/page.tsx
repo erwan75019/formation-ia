@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 // ======================================================
@@ -34,7 +34,16 @@ type PlanId = keyof typeof plans;
 // ======================================================
 
 export default function InscriptionPage() {
+  return (
+    <Suspense fallback={<InscriptionLoading />}>
+      <InscriptionContent />
+    </Suspense>
+  );
+}
+
+function InscriptionContent() {
   const supabase = createClient();
+  const router = useRouter();
 
   const searchParams = useSearchParams();
 
@@ -135,7 +144,7 @@ export default function InscriptionPage() {
     // SUPABASE SIGNUP
     // ------------------------------------------------------
 
-    const { error: signUpError } =
+    const { data: signUpData, error: signUpError } =
       await supabase.auth.signUp({
         email: cleanEmail,
 
@@ -165,6 +174,12 @@ export default function InscriptionPage() {
       setError(
         signUpError.message
       );
+      return;
+    }
+
+    if (signUpData.session) {
+      router.replace(`/abonnement?plan=${planId}`);
+      router.refresh();
       return;
     }
 
@@ -545,6 +560,14 @@ export default function InscriptionPage() {
 
       </div>
 
+    </main>
+  );
+}
+
+function InscriptionLoading() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#f5f6f8] px-6 text-slate-600">
+      Chargement du formulaire…
     </main>
   );
 }

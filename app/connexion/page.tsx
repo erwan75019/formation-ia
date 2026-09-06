@@ -100,7 +100,7 @@ export default function ConnexionPage() {
               />
 
               <Stat
-                value="74"
+                value="84"
                 label="Leçons"
               />
 

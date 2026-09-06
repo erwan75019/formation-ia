@@ -1,10 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function AbonnementPage() {
+  return (
+    <Suspense fallback={<AbonnementLoading />}>
+      <AbonnementContent />
+    </Suspense>
+  );
+}
+
+function AbonnementContent() {
   const searchParams = useSearchParams();
 
   const requestedPlan = searchParams.get("plan");
@@ -256,6 +264,14 @@ export default function AbonnementPage() {
 
       </div>
 
+    </main>
+  );
+}
+
+function AbonnementLoading() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#f5f6f8] px-6 text-slate-600">
+      Chargement de l&apos;offre…
     </main>
   );
 }
