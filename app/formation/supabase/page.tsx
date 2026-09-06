@@ -1,20 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isValidLessonCompletion, moduleLessonIds } from "@/lib/training/catalog";
 
 // ======================================================
 // MODULE 07 — API & IA OBLIGATOIRE
 // ======================================================
 
-const previousModuleLessons = [
-  "api-01-intro",
-  "api-02-http",
-  "api-03-requests",
-  "api-04-response-json",
-  "api-05-auth",
-  "api-06-ai",
-  "api-07-project",
-];
+const previousModuleLessons = moduleLessonIds[7];
 
 // ======================================================
 // MODULE 08 — BASES DE DONNÉES & SUPABASE
@@ -100,7 +93,7 @@ export default async function SupabaseModulePage() {
   const { data: progressData, error: progressError } =
     await supabase
       .from("lesson_progress")
-      .select("lesson_id, completed")
+      .select("lesson_id, completed, completed_at")
       .eq("user_id", user.id);
 
   if (progressError) {
@@ -112,7 +105,7 @@ export default async function SupabaseModulePage() {
 
   const completedIds = new Set(
     progressData
-      ?.filter((item) => item.completed)
+      ?.filter((item) => isValidLessonCompletion(item))
       .map((item) => item.lesson_id) ?? []
   );
 

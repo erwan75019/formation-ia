@@ -9,7 +9,7 @@ const modulePlans: Record<string, Plan> = {
   quotidien: "fondamentaux",
   "comprendre-ia": "fondamentaux",
   automatisation: "fondamentaux",
-  python: "complet",
+  "site-web": "complet",
   "api-ia": "complet",
   supabase: "complet",
   "saas-ia": "complet",
@@ -20,6 +20,12 @@ const modulePlans: Record<string, Plan> = {
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
+
+  // Ces fichiers sont des ressources publiques, pas des pages de formation.
+  // next/image doit pouvoir les lire sans session pour les optimiser.
+  if (isPublicFormationAsset(request.nextUrl.pathname)) {
+    return response;
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,6 +55,10 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
+    if (request.nextUrl.pathname === "/inscription") {
+      return response;
+    }
+
     return redirectWithCookies(request, response, "/connexion");
   }
 
@@ -72,11 +82,34 @@ export async function proxy(request: NextRequest) {
       ? plan === "fondamentaux" || plan === "complet"
       : requiredPlan === "complet" && plan === "complet";
 
+  if (request.nextUrl.pathname === "/inscription") {
+    const requestedPlan = request.nextUrl.searchParams.get("plan");
+    const checkoutPlan =
+      requestedPlan === "fondamentaux" || requestedPlan === "complet"
+        ? requestedPlan
+        : "fondamentaux";
+
+    return redirectWithCookies(
+      request,
+      response,
+      activeSubscription
+        ? "/dashboard"
+        : `/abonnement?plan=${checkoutPlan}`
+    );
+  }
+
   if (!requiredPlan || !activeSubscription || !planAllowed) {
     return redirectWithCookies(request, response, "/tarifs");
   }
 
   return response;
+}
+
+function isPublicFormationAsset(pathname: string) {
+  return (
+    pathname.startsWith("/formation/") &&
+    /\.(?:avif|gif|jpe?g|png|svg|webp|zip)$/i.test(pathname)
+  );
 }
 
 function redirectWithCookies(
@@ -96,5 +129,5 @@ function redirectWithCookies(
 }
 
 export const config = {
-  matcher: ["/formation/:path*"],
+  matcher: ["/formation/:path*", "/inscription"],
 };

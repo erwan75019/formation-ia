@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">Parcours utilisateur de PropertyMatch</title>
+  <desc id="desc">Le visiteur passe de l’accueil aux biens, ouvre un détail, puis peut conserver un favori local.</desc>
+  <rect width="1200" height="360" rx="28" fill="#06182F"/>
+  <text x="600" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#fff">Le parcours que vous allez construire</text>
+  <g font-family="Arial, sans-serif" text-anchor="middle">
+    <g transform="translate(55 110)"><rect width="235" height="150" rx="20" fill="#fff"/><text x="118" y="58" font-size="24" font-weight="700" fill="#06182F">Accueil</text><text x="118" y="94" font-size="16" fill="#475569">Saisir ses critères</text></g>
+    <g transform="translate(355 110)"><rect width="235" height="150" rx="20" fill="#fff"/><text x="118" y="58" font-size="24" font-weight="700" fill="#06182F">Biens</text><text x="118" y="94" font-size="16" fill="#475569">Comparer les résultats</text></g>
+    <g transform="translate(655 110)"><rect width="235" height="150" rx="20" fill="#fff"/><text x="118" y="58" font-size="24" font-weight="700" fill="#06182F">Détail</text><text x="118" y="94" font-size="16" fill="#475569">Examiner un logement</text></g>
+    <g transform="translate(955 110)"><rect width="190" height="150" rx="20" fill="#DCEFE7"/><text x="95" y="58" font-size="24" font-weight="700" fill="#06182F">Favoris</text><text x="95" y="94" font-size="16" fill="#475569">Garder en local</text></g>
+  </g>
+  <g stroke="#34D399" stroke-width="5" fill="none"><path d="M290 185H345"/><path d="M590 185H645"/><path d="M890 185H945"/></g>
+  <g fill="#34D399"><path d="M345 185l-14-9v18z"/><path d="M645 185l-14-9v18z"/><path d="M945 185l-14-9v18z"/></g>
+  <text x="600" y="315" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#CBD5E1">Une seule étape à la fois — aucune base de données dans le module 6</text>
+</svg>

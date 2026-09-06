@@ -1,20 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import {
+  isValidLessonCompletion,
+  moduleLessonIds,
+} from "@/lib/training/catalog";
 
 // ======================================================
-// MODULE 06 — PYTHON OBLIGATOIRE
+// MODULE 06 — SITE WEB OBLIGATOIRE
 // ======================================================
 
-const previousModuleLessons = [
-  "python-01-variables",
-  "python-02-conditions",
-  "python-03-collections",
-  "python-04-boucles",
-  "python-05-fonctions",
-  "python-06-json",
-  "python-07-project",
-];
+const previousModuleLessons = moduleLessonIds[6];
+const officialModuleLessons = moduleLessonIds[7];
 
 // ======================================================
 // MODULE 07 — API & IA
@@ -24,65 +21,83 @@ const lessons = [
   {
     id: "api-01-intro",
     number: "01",
-    title: "Qu’est-ce qu’une API ?",
-    duration: "12 min",
+    title: "Structurer LaunchCraft et créer l’interface initiale",
+    duration: "50 min",
     description:
-      "Comprenez comment deux applications peuvent communiquer automatiquement entre elles.",
-    type: "Concept + pratique",
+      "Créez le projet Next.js puis construisez son premier shell sombre et responsive.",
+    type: "Next.js + interface",
   },
   {
     id: "api-02-http",
     number: "02",
-    title: "HTTP, GET et POST",
-    duration: "16 min",
+    title: "Concevoir la base de données et ses protections",
+    duration: "60 min",
     description:
-      "Découvrez comment une application envoie des requêtes à un serveur et récupère des données.",
-    type: "Exercice pratique",
+      "Créez le modèle Supabase séparé de LaunchCraft, ses relations, contraintes et politiques RLS.",
+    type: "Supabase + sécurité",
   },
   {
     id: "api-03-requests",
     number: "03",
-    title: "Utiliser requests en Python",
-    duration: "18 min",
+    title: "Inscription, connexion et protection des routes",
+    duration: "75 min",
     description:
-      "Effectuez vos premiers appels API avec Python et récupérez une réponse.",
-    type: "Code Python",
+      "Connectez LaunchCraft à Supabase Auth puis protégez le dashboard côté serveur.",
+    type: "Supabase Auth",
   },
   {
-    id: "api-04-response-json",
+    id: "api-04-status",
     number: "04",
-    title: "Réponses, status codes et JSON",
-    duration: "18 min",
+    title: "Création et gestion des projets",
+    duration: "90 min",
     description:
-      "Apprenez à vérifier si une requête a réussi puis à exploiter les données JSON reçues.",
-    type: "Code Python",
+      "Créez un CRUD sécurisé qui isole strictement les projets de chaque compte.",
+    type: "Server Actions + RLS",
   },
   {
-    id: "api-05-auth",
+    id: "api-05-keys-env",
     number: "05",
-    title: "Clés API et authentification",
-    duration: "16 min",
+    title: "Créer et valider les objectifs d’un projet",
+    duration: "90 min",
     description:
-      "Comprenez comment sécuriser l’accès à une API et pourquoi une clé API ne doit jamais être exposée publiquement.",
-    type: "Sécurité",
+      "Ajoutez des objectifs sécurisés et calculez la progression réelle de chaque projet.",
+    type: "Relations + Server Actions",
   },
   {
-    id: "api-06-ai",
+    id: "api-06-ai-call",
     number: "06",
-    title: "Appeler une API d’IA",
-    duration: "22 min",
+    title: "Créer, prioriser et terminer les tâches",
+    duration: "100 min",
     description:
-      "Comprenez comment envoyer un prompt à un service d’IA et récupérer sa réponse dans votre programme.",
-    type: "IA + API",
+      "Construisez le plan d’action réel de chaque projet avec statuts, priorités et échéances.",
+    type: "Tâches + indicateurs",
   },
   {
     id: "api-07-project",
     number: "07",
-    title: "Mini-projet : application connectée à une API",
-    duration: "35 min",
+    title: "Construire le dashboard réel de LaunchCraft",
+    duration: "90 min",
     description:
-      "Construisez la logique complète d’un programme qui récupère des données externes, les analyse puis produit un résultat.",
-    type: "Mini-projet",
+      "Synthétisez les données Supabase en indicateurs, échéances et projets récents.",
+    type: "Dashboard serveur",
+  },
+  {
+    id: "api-08-calendar",
+    number: "08",
+    title: "Calendrier : organiser les échéances",
+    duration: "100 min",
+    description:
+      "Visualisez objectifs et tâches dans une vue mensuelle accessible et isolée par compte.",
+    type: "Dates + calendrier",
+  },
+  {
+    id: "api-09-security",
+    number: "09",
+    title: "Sécurité finale et validation de LaunchCraft",
+    duration: "110 min",
+    description:
+      "Testez l’isolation, les accès directs, l’accessibilité, les états et le responsive de l’application finale.",
+    type: "Audit + finalisation",
   },
 ];
 
@@ -100,7 +115,7 @@ export default async function APIIAModulePage() {
   const { data: progressData, error: progressError } =
     await supabase
       .from("lesson_progress")
-      .select("lesson_id, completed")
+      .select("lesson_id, completed, completed_at")
       .eq("user_id", user.id);
 
   if (progressError) {
@@ -112,7 +127,7 @@ export default async function APIIAModulePage() {
 
   const completedIds = new Set(
     progressData
-      ?.filter((item) => item.completed)
+      ?.filter((item) => isValidLessonCompletion(item))
       .map((item) => item.lesson_id) ?? []
   );
 
@@ -147,18 +162,16 @@ export default async function APIIAModulePage() {
     };
   });
 
-  const completedCount =
-    lessonStates.filter(
-      (lesson) =>
-        lesson.status === "done"
-    ).length;
+  const completedCount = officialModuleLessons.filter((lessonId) =>
+    completedIds.has(lessonId)
+  ).length;
 
   const progress = Math.round(
-    (completedCount / lessons.length) * 100
+    (completedCount / officialModuleLessons.length) * 100
   );
 
   const moduleCompleted =
-    completedCount === lessons.length;
+    completedCount === officialModuleLessons.length;
 
   const nextLesson =
     lessonStates.find(
@@ -173,7 +186,7 @@ export default async function APIIAModulePage() {
 
         {/* SIDEBAR */}
 
-        <aside className="hidden w-80 border-r border-slate-200 bg-white md:block">
+        <aside className="hidden w-72 shrink-0 border-r border-slate-200 bg-white xl:block">
 
           <div className="p-6">
 
@@ -239,7 +252,7 @@ export default async function APIIAModulePage() {
                 </div>
 
                 <p className="mt-3 text-xs text-slate-400">
-                  {completedCount} / {lessons.length} leçons
+                  {completedCount} / {officialModuleLessons.length} checkpoints
                 </p>
 
               </div>
@@ -271,9 +284,9 @@ export default async function APIIAModulePage() {
 
         {/* CONTENU */}
 
-        <section className="flex-1 px-6 py-8 lg:px-10">
+        <section className="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-8 2xl:px-10">
 
-          <div className="mx-auto max-w-6xl">
+          <div className="mx-auto w-full max-w-[1320px]">
 
             {/* TOP BAR */}
 
@@ -396,7 +409,7 @@ else:
               <div className="mt-5 flex flex-wrap items-center gap-4">
 
                 <p className="text-sm text-slate-400">
-                  {completedCount} / {lessons.length} leçons terminées
+                  {completedCount} / {officialModuleLessons.length} checkpoints terminés
                 </p>
 
                 {nextLesson && (
@@ -478,12 +491,12 @@ else:
                 </div>
 
                 <p className="text-sm text-slate-400">
-                  {completedCount} / {lessons.length} terminées
+                  {completedCount} / {officialModuleLessons.length} terminés
                 </p>
 
               </div>
 
-              <div className="mt-7 grid gap-5 md:grid-cols-2">
+              <div className="mt-7 grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
 
                 {lessonStates.map((lesson) => (
                   <LessonCard
@@ -743,7 +756,7 @@ function LessonCard({
 
   const content = (
     <div
-      className={`h-full rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition ${
+      className={`flex h-full min-w-0 flex-col rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition sm:p-6 ${
         locked
           ? "opacity-60"
           : "hover:-translate-y-1 hover:shadow-lg"
@@ -782,15 +795,15 @@ function LessonCard({
 
       </div>
 
-      <h3 className="mt-5 text-xl font-semibold">
+      <h3 className="mt-5 text-xl font-semibold leading-7">
         {title}
       </h3>
 
-      <p className="mt-3 text-sm leading-6 text-slate-500">
+      <p className="mt-3 flex-1 text-sm leading-6 text-slate-500">
         {description}
       </p>
 
-      <div className="mt-5 flex items-center justify-between">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
 
         <span className="text-sm text-slate-400">
           {duration}

@@ -1,5 +1,20 @@
 export type TrainingPlan = "fondamentaux" | "complet";
 
+export const webLessonCatalog = [
+  { id: "web-01-projet-vscode", number: "01", title: "Découvrir PropertyMatch et préparer VS Code" },
+  { id: "web-02-nextjs", number: "02", title: "Créer et lancer le projet Next.js" },
+  { id: "web-03-structure", number: "03", title: "Construire la structure de la page d’accueil" },
+  { id: "web-04-tailwind", number: "04", title: "Reproduire le design avec Tailwind" },
+  { id: "web-05-donnees", number: "05", title: "Créer les données immobilières avec TypeScript" },
+  { id: "web-06-composants", number: "06", title: "Découper le site en composants React" },
+  { id: "web-07-cartes", number: "07", title: "Afficher les cartes des logements" },
+  { id: "web-08-recherche", number: "08", title: "Ajouter la recherche, les filtres et les paramètres d’URL" },
+  { id: "web-09-matching", number: "09", title: "Calculer et expliquer la compatibilité" },
+  { id: "web-10-fiches", number: "10", title: "Créer les fiches détaillées des logements" },
+  { id: "web-11-favoris", number: "11", title: "Enregistrer les favoris dans le navigateur" },
+  { id: "web-12-publication", number: "12", title: "Finaliser, tester et publier sur Vercel" },
+] as const;
+
 export const moduleLessonIds = {
   1: [
     "chatgpt-01-intro",
@@ -39,36 +54,17 @@ export const moduleLessonIds = {
     "automation-06-workflow",
     "automation-07-project",
   ],
-  6: [
-    "web-01-fonctionnement",
-    "web-02-environnement",
-    "web-03-html-jsx",
-    "web-04-css-tailwind",
-    "web-05-javascript",
-    "web-06-react-components",
-    "web-07-react-state",
-    "web-08-nextjs",
-    "web-09-engine",
-    "web-10-application",
-    "web-11-favoris",
-    "web-12-matching",
-    "web-13-navigation",
-    "web-14-premium-home",
-    "web-15-premium-results",
-    "web-16-premium-property",
-    "web-17-product-pages",
-    "web-18-responsive",
-    "web-19-tests-git",
-    "web-20-publication",
-  ],
+  6: webLessonCatalog.map((lesson) => lesson.id),
   7: [
     "api-01-intro",
     "api-02-http",
     "api-03-requests",
-    "api-04-response-json",
-    "api-05-auth",
-    "api-06-ai",
+    "api-04-status",
+    "api-05-keys-env",
+    "api-06-ai-call",
     "api-07-project",
+    "api-08-calendar",
+    "api-09-security",
   ],
   8: [
     "supabase-01-database",
@@ -174,7 +170,7 @@ export const trainingModules = [
     title: "Créer un site web de A à Z",
     description:
       "Construire PropertyMatch de zéro dans VS Code, le faire fonctionner localement puis le publier sur Internet.",
-    route: "/formation/python",
+    route: "/formation/site-web",
     lessonIds: moduleLessonIds[6],
   },
   {
@@ -231,6 +227,11 @@ export const planModuleLimits: Record<TrainingPlan, number> = {
   fondamentaux: 5,
   complet: 12,
 };
+
+export function getNextTrainingModuleRoute(moduleNumber: number) {
+  const index = trainingModules.findIndex((module) => module.number === moduleNumber);
+  return index >= 0 ? trainingModules[index + 1]?.route ?? null : null;
+}
 
 export const planLessonIds = {
   fondamentaux: [

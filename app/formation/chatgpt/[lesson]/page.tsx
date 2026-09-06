@@ -303,43 +303,6 @@ export default async function LessonPage({
 
         </header>
 
-        {/* VIDEO */}
-
-        <section className="mt-8 overflow-hidden rounded-[30px] bg-slate-950 shadow-xl">
-
-          <div className="flex aspect-video items-center justify-center">
-
-            <button
-              type="button"
-              className="flex h-20 w-20 items-center justify-center rounded-full bg-white text-2xl text-slate-950 shadow-xl transition hover:scale-105"
-            >
-              ▶
-            </button>
-
-          </div>
-
-          <div className="border-t border-slate-800 px-6 py-4">
-
-            <div className="flex items-center justify-between gap-4 text-sm">
-
-              <span className="text-slate-400">
-                {
-                  lesson.title
-                }
-              </span>
-
-              <span className="font-medium text-white">
-                {
-                  lesson.duration
-                }
-              </span>
-
-            </div>
-
-          </div>
-
-        </section>
-
         {/* CONTENT */}
 
         <div className="mt-8 space-y-6">

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Wireframe annoté de la page d’accueil PropertyMatch</title>
+  <desc id="desc">Le wireframe situe le header, le hero en deux zones, le formulaire, les indicateurs, les résultats et le footer.</desc>
+  <rect width="1200" height="760" rx="28" fill="#F8FAFC"/>
+  <g font-family="Arial, sans-serif" fill="#06182F">
+    <rect x="55" y="45" width="1090" height="72" rx="8" fill="#fff" stroke="#94A3B8" stroke-width="2"/><text x="80" y="88" font-size="19" font-weight="700">1. HEADER : logo + navigation</text>
+    <rect x="55" y="132" width="635" height="300" rx="8" fill="#DBEAFE" stroke="#64748B" stroke-width="2"/><text x="80" y="170" font-size="19" font-weight="700">2. HERO — texte et formulaire</text><rect x="90" y="205" width="380" height="34" rx="6" fill="#fff"/><rect x="90" y="255" width="510" height="22" rx="6" fill="#fff"/><rect x="90" y="305" width="545" height="95" rx="8" fill="#fff" stroke="#94A3B8"/>
+    <rect x="705" y="132" width="440" height="300" rx="8" fill="#E2E8F0" stroke="#64748B" stroke-width="2"/><text x="925" y="270" text-anchor="middle" font-size="19" font-weight="700">3. FUTURE IMAGE</text><text x="925" y="300" text-anchor="middle" font-size="15">ajoutée plus tard</text>
+    <rect x="55" y="447" width="1090" height="82" rx="8" fill="#fff" stroke="#94A3B8" stroke-width="2"/><text x="80" y="495" font-size="19" font-weight="700">4. INDICATEURS CALCULÉS — aucun chiffre inventé</text>
+    <rect x="55" y="544" width="1090" height="125" rx="8" fill="#fff" stroke="#94A3B8" stroke-width="2"/><text x="80" y="582" font-size="19" font-weight="700">5. RÉSULTATS</text><rect x="80" y="605" width="315" height="40" rx="6" fill="#E2E8F0"/><rect x="420" y="605" width="315" height="40" rx="6" fill="#E2E8F0"/><rect x="760" y="605" width="315" height="40" rx="6" fill="#E2E8F0"/>
+    <rect x="55" y="684" width="1090" height="42" rx="8" fill="#06182F"/><text x="80" y="712" font-size="16" fill="#fff">6. FOOTER — PropertyMatch, projet pédagogique</text>
+  </g>
+</svg>

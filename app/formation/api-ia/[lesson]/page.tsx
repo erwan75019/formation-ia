@@ -1,6 +1,17 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import LessonCoach from "@/components/formation/LessonCoach";
+import LaunchCraftLessonOne from "@/components/formation/launchcraft/LaunchCraftLessonOne";
+import LaunchCraftLessonTwo from "@/components/formation/launchcraft/LaunchCraftLessonTwo";
+import LaunchCraftLessonThree from "@/components/formation/launchcraft/LaunchCraftLessonThree";
+import LaunchCraftLessonFour from "@/components/formation/launchcraft/LaunchCraftLessonFour";
+import LaunchCraftLessonFive from "@/components/formation/launchcraft/LaunchCraftLessonFive";
+import LaunchCraftLessonSix from "@/components/formation/launchcraft/LaunchCraftLessonSix";
+import LaunchCraftLessonSeven from "@/components/formation/launchcraft/LaunchCraftLessonSeven";
+import LaunchCraftLessonEight from "@/components/formation/launchcraft/LaunchCraftLessonEight";
+import LaunchCraftLessonNine from "@/components/formation/launchcraft/LaunchCraftLessonNine";
+import { isValidLessonCompletion, moduleLessonIds } from "@/lib/training/catalog";
 
 // ======================================================
 // MODULE 07 — API & IA
@@ -11,12 +22,12 @@ const lessons = [
     slug: "01",
     id: "api-01-intro",
     number: "01",
-    title: "Qu’est-ce qu’une API ?",
-    duration: "12 min",
+    title: "Structurer LaunchCraft et créer l’interface initiale",
+    duration: "50 min",
     description:
-      "Comprenez comment deux applications peuvent communiquer automatiquement entre elles.",
-    eyebrow: "LES BASES",
-    contentTitle: "Une API est un intermédiaire entre deux applications",
+      "Créez le projet Next.js puis construisez son premier shell sombre et responsive dans VS Code.",
+    eyebrow: "LAUNCHCRAFT",
+    contentTitle: "Une application commence par une structure claire",
     paragraphs: [
       "Jusqu’ici, vos programmes Python utilisaient principalement des données écrites directement dans votre code.",
       "Une API permet à votre programme de communiquer avec une autre application afin de récupérer des informations ou de lui envoyer des données.",
@@ -41,12 +52,12 @@ Service externe
     slug: "02",
     id: "api-02-http",
     number: "02",
-    title: "HTTP, GET et POST",
-    duration: "16 min",
+    title: "Concevoir la base de données et ses protections",
+    duration: "60 min",
     description:
-      "Découvrez comment une application envoie des requêtes à un serveur et récupère des données.",
-    eyebrow: "COMMUNIQUER AVEC UN SERVEUR",
-    contentTitle: "Les requêtes HTTP",
+      "Créez le modèle Supabase séparé de LaunchCraft, ses relations, contraintes et politiques RLS.",
+    eyebrow: "DONNÉES ET SÉCURITÉ",
+    contentTitle: "Une application fiable commence par un modèle cohérent",
     paragraphs: [
       "Pour communiquer avec une API sur le Web, votre application utilise généralement le protocole HTTP.",
       "GET sert principalement à demander une ressource. POST sert généralement à envoyer des données afin de créer une ressource ou déclencher un traitement.",
@@ -72,12 +83,12 @@ POST /prospects
     slug: "03",
     id: "api-03-requests",
     number: "03",
-    title: "Utiliser requests en Python",
-    duration: "18 min",
+    title: "Inscription, connexion et protection des routes",
+    duration: "75 min",
     description:
-      "Effectuez vos premiers appels API avec Python et récupérez une réponse.",
-    eyebrow: "PYTHON + API",
-    contentTitle: "Envoyer une requête depuis Python",
+      "Reliez LaunchCraft à son projet Supabase, authentifiez un utilisateur et protégez le dashboard côté serveur.",
+    eyebrow: "AUTHENTIFICATION",
+    contentTitle: "Une session vérifiée par le serveur",
     paragraphs: [
       "Python peut communiquer avec une API grâce à une bibliothèque comme requests.",
       "La fonction requests.get() envoie une requête GET vers l’adresse indiquée. La réponse du serveur est ensuite stockée dans une variable.",
@@ -100,14 +111,14 @@ print(response)`,
 
   {
     slug: "04",
-    id: "api-04-response-json",
+    id: "api-04-status",
     number: "04",
-    title: "Réponses, status codes et JSON",
-    duration: "18 min",
+    title: "Création et gestion des projets",
+    duration: "90 min",
     description:
-      "Apprenez à vérifier si une requête a réussi puis à exploiter les données JSON reçues.",
-    eyebrow: "EXPLOITER LA RÉPONSE",
-    contentTitle: "Transformer la réponse en données Python",
+      "Affichez, créez, modifiez et supprimez uniquement les projets du compte connecté.",
+    eyebrow: "CRUD SÉCURISÉ",
+    contentTitle: "Des mutations contrôlées par le serveur et RLS",
     paragraphs: [
       "Une réponse HTTP contient notamment un code de statut. Par exemple, 200 indique généralement que la requête a réussi et 404 que la ressource demandée n’a pas été trouvée.",
       "Lorsqu’une API renvoie du JSON, response.json() permet de convertir ces données en objets Python que vous savez déjà manipuler.",
@@ -138,14 +149,14 @@ else:
 
   {
     slug: "05",
-    id: "api-05-auth",
+    id: "api-05-keys-env",
     number: "05",
-    title: "Clés API et authentification",
-    duration: "16 min",
+    title: "Créer et valider les objectifs d’un projet",
+    duration: "90 min",
     description:
-      "Comprenez comment sécuriser l’accès à une API et pourquoi une clé API ne doit jamais être exposée publiquement.",
-    eyebrow: "SÉCURITÉ",
-    contentTitle: "Une API peut avoir besoin de savoir qui vous êtes",
+      "Gérez les objectifs du projet et calculez sa progression réelle sans faire confiance au navigateur.",
+    eyebrow: "OBJECTIFS",
+    contentTitle: "Une progression dérivée de données vérifiées",
     paragraphs: [
       "Certaines API sont publiques, mais beaucoup demandent une authentification. Une clé API peut servir à identifier l’application qui effectue la requête.",
       "Une clé secrète ne doit pas être écrite directement dans du code envoyé sur GitHub ou exposé dans le navigateur. Elle sera plus tard stockée dans une variable d’environnement côté serveur.",
@@ -174,14 +185,14 @@ response = requests.get(
 
   {
     slug: "06",
-    id: "api-06-ai",
+    id: "api-06-ai-call",
     number: "06",
-    title: "Appeler une API d’IA",
-    duration: "22 min",
+    title: "Créer, prioriser et terminer les tâches",
+    duration: "100 min",
     description:
-      "Comprenez comment envoyer un prompt à un service d’IA et récupérer sa réponse dans votre programme.",
-    eyebrow: "API + INTELLIGENCE ARTIFICIELLE",
-    contentTitle: "Votre programme peut maintenant communiquer avec une IA",
+      "Construisez le plan d’action du projet avec statuts, priorités, échéances et indicateurs réels.",
+    eyebrow: "TÂCHES",
+    contentTitle: "Des actions rattachées au bon projet",
     paragraphs: [
       "Une API d’intelligence artificielle suit le même principe général que les API que vous venez d’étudier : votre programme prépare une requête, l’envoie au service puis récupère une réponse.",
       "La différence est surtout le contenu de la requête. Vous pouvez par exemple envoyer des instructions et du texte, puis exploiter la réponse générée dans votre application.",
@@ -220,12 +231,12 @@ Votre application`,
     slug: "07",
     id: "api-07-project",
     number: "07",
-    title: "Mini-projet : application connectée à une API",
-    duration: "35 min",
+    title: "Construire le dashboard réel de LaunchCraft",
+    duration: "90 min",
     description:
-      "Construisez la logique complète d’un programme qui récupère des données externes, les analyse puis produit un résultat.",
-    eyebrow: "MINI-PROJET",
-    contentTitle: "Assembler Python et API",
+      "Synthétisez projets, objectifs, tâches, progression et prochaines échéances depuis Supabase.",
+    eyebrow: "DASHBOARD",
+    contentTitle: "Transformer des lignes en décisions utiles",
     paragraphs: [
       "Vous avez maintenant toutes les briques nécessaires pour comprendre un programme qui récupère des données externes et applique automatiquement une logique métier.",
       "Le mini-projet vous demandera de combiner requests, JSON, conditions, dictionnaires et fonctions dans un seul programme.",
@@ -251,6 +262,34 @@ else:
       "Analyser les données.",
       "Produire automatiquement un résultat.",
     ],
+  },
+  {
+    slug: "08",
+    id: "api-08-calendar",
+    number: "08",
+    title: "Calendrier : organiser les échéances",
+    duration: "100 min",
+    description:
+      "Regroupez objectifs et tâches dans une vue mensuelle sécurisée, accessible et sans décalage UTC.",
+    eyebrow: "CALENDRIER",
+    contentTitle: "Des dates fiables pour décider quoi faire ensuite",
+    paragraphs: ["Cette leçon construit le huitième checkpoint LaunchCraft."],
+    code: "objectives.target_date + tasks.due_date → calendrier mensuel",
+    points: ["Dates civiles", "Grille mensuelle", "Isolation par utilisateur"],
+  },
+  {
+    slug: "09",
+    id: "api-09-security",
+    number: "09",
+    title: "Sécurité finale et validation de LaunchCraft",
+    duration: "110 min",
+    description:
+      "Auditez l’isolation, l’accessibilité, les états et le responsive avant de valider l’application.",
+    eyebrow: "FINALISATION",
+    contentTitle: "Vérifier l’application de bout en bout",
+    paragraphs: ["Ce checkpoint clôt le module uniquement après son QCM sécurisé."],
+    code: "session + validation + propriété + RLS + tests",
+    points: ["Isolation", "Accessibilité", "Responsive", "Build"],
   },
 ];
 
@@ -294,7 +333,7 @@ export default async function LessonPage({
   const { data: progressData, error: progressError } =
     await supabase
       .from("lesson_progress")
-      .select("lesson_id, completed")
+      .select("lesson_id, completed, completed_at")
       .eq("user_id", user.id);
 
   if (progressError) {
@@ -306,7 +345,7 @@ export default async function LessonPage({
 
   const completedIds = new Set(
     progressData
-      ?.filter((item) => item.completed)
+      ?.filter((item) => isValidLessonCompletion(item))
       .map((item) => item.lesson_id) ?? []
   );
 
@@ -348,14 +387,95 @@ export default async function LessonPage({
   // PROGRESSION MODULE
   // ======================================================
 
-  const completedCount = lessons.filter(
-    (item) =>
-      completedIds.has(item.id)
+  const officialModuleLessons = moduleLessonIds[7];
+  const completedCount = officialModuleLessons.filter((lessonId) =>
+    completedIds.has(lessonId)
   ).length;
 
   const moduleProgress = Math.round(
-    (completedCount / lessons.length) * 100
+    (completedCount / officialModuleLessons.length) * 100
   );
+
+  if (lesson.id === "api-01-intro") {
+    return (
+      <LaunchCraftLessonOne
+        lessonCompleted={lessonCompleted}
+        moduleProgress={moduleProgress}
+      />
+    );
+  }
+
+  if (lesson.id === "api-02-http") {
+    return (
+      <LaunchCraftLessonTwo
+        lessonCompleted={lessonCompleted}
+        moduleProgress={moduleProgress}
+      />
+    );
+  }
+
+  if (lesson.id === "api-03-requests") {
+    return (
+      <LaunchCraftLessonThree
+        lessonCompleted={lessonCompleted}
+        moduleProgress={moduleProgress}
+      />
+    );
+  }
+
+  if (lesson.id === "api-04-status") {
+    return (
+      <LaunchCraftLessonFour
+        lessonCompleted={lessonCompleted}
+        moduleProgress={moduleProgress}
+      />
+    );
+  }
+
+  if (lesson.id === "api-05-keys-env") {
+    return (
+      <LaunchCraftLessonFive
+        lessonCompleted={lessonCompleted}
+        moduleProgress={moduleProgress}
+      />
+    );
+  }
+
+  if (lesson.id === "api-06-ai-call") {
+    return (
+      <LaunchCraftLessonSix
+        lessonCompleted={lessonCompleted}
+        moduleProgress={moduleProgress}
+      />
+    );
+  }
+
+  if (lesson.id === "api-07-project") {
+    return (
+      <LaunchCraftLessonSeven
+        lessonCompleted={lessonCompleted}
+        moduleProgress={moduleProgress}
+      />
+    );
+  }
+
+  if (lesson.id === "api-08-calendar") {
+    return (
+      <LaunchCraftLessonEight
+        lessonCompleted={lessonCompleted}
+        moduleProgress={moduleProgress}
+      />
+    );
+  }
+
+  if (lesson.id === "api-09-security") {
+    return (
+      <LaunchCraftLessonNine
+        lessonCompleted={lessonCompleted}
+        moduleProgress={moduleProgress}
+      />
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#f5f7fb] px-6 py-8 text-slate-900">
@@ -488,7 +608,7 @@ export default async function LessonPage({
           </div>
 
           <p className="mt-3 text-xs text-slate-400">
-            {completedCount} / {lessons.length} leçons terminées
+            {completedCount} / {officialModuleLessons.length} checkpoints terminés
           </p>
 
         </section>
@@ -677,47 +797,7 @@ export default async function LessonPage({
               COACH IA
           ================================================== */}
 
-          <aside className="h-fit rounded-[26px] border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-8">
-
-            <div className="flex items-center gap-3">
-
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
-                ✦
-              </div>
-
-              <div>
-
-                <p className="font-bold">
-                  Coach IA
-                </p>
-
-                <p className="text-xs text-slate-400">
-                  API & IA · Leçon {lesson.number}
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="mt-6 rounded-2xl bg-slate-100 p-4 text-sm leading-6 text-slate-600">
-              Posez-moi une question sur cette leçon.
-              Je pourrai bientôt utiliser directement
-              le contexte du cours pour vous répondre.
-            </div>
-
-            <textarea
-              placeholder="Ex : Quelle est la différence entre GET et POST ?"
-              className="mt-4 min-h-32 w-full resize-none rounded-2xl border border-slate-200 p-4 text-sm outline-none transition focus:border-slate-400"
-            />
-
-            <button
-              type="button"
-              className="mt-3 w-full rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:scale-[1.01]"
-            >
-              Envoyer
-            </button>
-
-          </aside>
+          <LessonCoach lessonId={lesson.id} lessonLabel={`API & IA · Leçon ${lesson.number}`} />
 
         </div>
 

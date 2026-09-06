@@ -677,7 +677,7 @@ export default async function AutomationModulePage() {
                 </p>
 
                 <Link
-                  href="/formation/python"
+                  href="/formation/site-web"
                   className="mt-7 inline-flex rounded-2xl bg-white px-6 py-4 font-semibold text-slate-950 transition hover:scale-[1.02]"
                 >
                   Passer au Module 06 →

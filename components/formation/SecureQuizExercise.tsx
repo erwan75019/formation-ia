@@ -29,12 +29,14 @@ export default function SecureQuizExercise({
   lessonHref,
   nextLessonHref,
   moduleHref,
+  validationEndpoint = "/api/training/quiz/validate",
 }: {
   quiz: Quiz | undefined;
   lessonSlug: string;
   lessonHref: string;
   nextLessonHref: string | null;
   moduleHref: string;
+  validationEndpoint?: string;
 }) {
   const router = useRouter();
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -76,7 +78,7 @@ export default function SecureQuizExercise({
     setError("");
 
     try {
-      const response = await fetch("/api/training/quiz/validate", {
+      const response = await fetch(validationEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lesson_id: quiz?.lessonId, answers: finalAnswers }),

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import LessonCoach from "@/components/formation/LessonCoach";
 import FileExplorerLab from "@/components/formation/FileExplorerLab";
 import FileIntroPractice from "@/components/formation/FileIntroPractice";
 import Module04PracticeLab from "@/components/formation/Module04PracticeLab";
@@ -198,35 +199,6 @@ export default async function UnderstandAILessonPage({
 
         </div>
 
-        {/* VIDEO */}
-        <div className="mt-8 overflow-hidden rounded-[30px] bg-slate-950 shadow-2xl">
-
-          <div className="flex aspect-video items-center justify-center">
-
-            <button className="flex h-20 w-20 items-center justify-center rounded-full bg-white text-2xl text-slate-950 shadow-xl transition hover:scale-105">
-              ▶
-            </button>
-
-          </div>
-
-          <div className="border-t border-slate-800 px-6 py-4">
-
-            <div className="flex justify-between text-sm">
-
-              <span className="text-slate-400">
-                {lesson.title}
-              </span>
-
-              <span className="text-white">
-                {lesson.duration}
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
         {/* CONTENU */}
         <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
 
@@ -389,42 +361,7 @@ export default async function UnderstandAILessonPage({
           </section>
 
           {/* COACH IA */}
-          <aside className="h-fit rounded-[26px] border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-8">
-
-            <div className="flex items-center gap-3">
-
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
-                ✦
-              </div>
-
-              <div>
-
-                <p className="font-bold">
-                  Coach IA
-                </p>
-
-                <p className="text-xs text-slate-400">
-                  Leçon {lesson.number}
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="mt-6 rounded-2xl bg-slate-100 p-4 text-sm leading-6 text-slate-600">
-              Je peux vous réexpliquer cette notion avec un exemple encore plus simple.
-            </div>
-
-            <textarea
-              placeholder="Votre question..."
-              className="mt-4 min-h-32 w-full resize-none rounded-2xl border border-slate-200 p-4 text-sm outline-none transition focus:border-slate-400"
-            />
-
-            <button className="mt-3 w-full rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:scale-[1.01]">
-              Envoyer
-            </button>
-
-          </aside>
+          <LessonCoach lessonId={lesson.id} lessonLabel={`Leçon ${lesson.number}`} />
 
         </div>
 

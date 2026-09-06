@@ -315,8 +315,8 @@ ${interaction || "[interaction à définir]"}`;
             <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400">
               Vous devez rendre une
               dissertation universitaire.
-              Votre objectif est d'utiliser
-              l'IA intelligemment pour
+              Votre objectif est d&apos;utiliser
+              l&apos;IA intelligemment pour
               améliorer votre raisonnement,
               pas simplement obtenir un texte.
             </p>
@@ -603,7 +603,7 @@ ${interaction || "[interaction à définir]"}`;
             <p className="mt-3 text-sm leading-7 text-slate-500">
               Le rôle « tuteur universitaire »
               ne suffit pas. Vous devez maintenant
-              préciser ce qu'il doit réellement faire.
+              préciser ce qu&apos;il doit réellement faire.
             </p>
 
             <div className="mt-7">
@@ -766,7 +766,7 @@ ${interaction || "[interaction à définir]"}`;
 
           <p className="mt-3 max-w-3xl leading-7 text-slate-500">
             Ollama vient réellement
-            d'exécuter votre consigne
+            d&apos;exécuter votre consigne
             sur le sujet de dissertation.
           </p>
 
@@ -826,11 +826,11 @@ ${interaction || "[interaction à définir]"}`;
           <div className="mt-6 rounded-[24px] border border-blue-200 bg-blue-50 p-6">
 
             <p className="text-xs font-bold tracking-[0.15em] text-blue-700">
-              CE QU'IL FAUT OBSERVER
+              CE QU&apos;IL FAUT OBSERVER
             </p>
 
             <h4 className="mt-3 text-xl font-bold text-blue-950">
-              Le rôle a-t-il réellement changé le comportement de l'IA ?
+              Le rôle a-t-il réellement changé le comportement de l&apos;IA ?
             </h4>
 
             <p className="mt-3 text-sm leading-7 text-blue-900">
@@ -839,7 +839,7 @@ ${interaction || "[interaction à définir]"}`;
               raisonnement et avance avec vous,
               votre rôle et votre méthode ont
               réellement influencé la réponse.
-              S'il rédige immédiatement le devoir,
+              S&apos;il rédige immédiatement le devoir,
               votre consigne reste trop permissive.
             </p>
 
@@ -856,7 +856,7 @@ ${interaction || "[interaction à définir]"}`;
               à rendre le prompt impressionnant.
               Il définit une perspective,
               une méthode ou une façon
-              d'interagir qui améliore
+              d&apos;interagir qui améliore
               réellement le résultat.
             </p>
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import LessonCoach from "@/components/formation/LessonCoach";
 
 // ======================================================
 // MODULE 08 — BASES DE DONNÉES & SUPABASE
@@ -574,46 +575,7 @@ export default async function SupabaseLessonPage({
 
           {/* COACH */}
 
-          <aside className="h-fit rounded-[26px] border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-8">
-
-            <div className="flex items-center gap-3">
-
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
-                ✦
-              </div>
-
-              <div>
-
-                <p className="font-bold">
-                  Coach IA
-                </p>
-
-                <p className="text-xs text-slate-400">
-                  Base de données · Leçon {lesson.number}
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="mt-6 rounded-2xl bg-slate-100 p-4 text-sm leading-6 text-slate-600">
-              Posez une question sur la structure des données,
-              l&apos;authentification ou la sécurité.
-            </div>
-
-            <textarea
-              placeholder="Ex : à quoi sert user_id ?"
-              className="mt-4 min-h-32 w-full resize-none rounded-2xl border border-slate-200 p-4 text-sm outline-none transition focus:border-slate-400"
-            />
-
-            <button
-              type="button"
-              className="mt-3 w-full rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:scale-[1.01]"
-            >
-              Envoyer
-            </button>
-
-          </aside>
+          <LessonCoach lessonId={lesson.id} lessonLabel={`Base de données · Leçon ${lesson.number}`} />
 
         </div>
 

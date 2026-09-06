@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import LessonCoach from "@/components/formation/LessonCoach";
 import AutomationPractice from "@/components/formation/AutomationPractice";
 import ProjectValidationNotice from "@/components/formation/projects/ProjectValidationNotice";
 import {
@@ -236,41 +237,6 @@ export default async function AutomationLessonPage({
           </p>
 
         </header>
-
-        {/* ==================================================
-            VIDEO
-        ================================================== */}
-
-        <section className="mt-8 overflow-hidden rounded-[30px] bg-slate-950 shadow-xl">
-
-          <div className="flex aspect-video items-center justify-center">
-
-            <button
-              type="button"
-              className="flex h-20 w-20 items-center justify-center rounded-full bg-white text-2xl text-slate-950 shadow-xl transition hover:scale-105"
-            >
-              ▶
-            </button>
-
-          </div>
-
-          <div className="border-t border-slate-800 px-6 py-4">
-
-            <div className="flex items-center justify-between text-sm">
-
-              <span className="text-slate-400">
-                {lesson.title}
-              </span>
-
-              <span className="font-medium text-white">
-                {lesson.duration}
-              </span>
-
-            </div>
-
-          </div>
-
-        </section>
 
         {/* ==================================================
             CONTENU + COACH
@@ -531,51 +497,7 @@ export default async function AutomationLessonPage({
               COACH IA
           ================================================== */}
 
-          <aside className="h-fit rounded-[26px] border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-8">
-
-            <div className="flex items-center gap-3">
-
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
-                ✦
-              </div>
-
-              <div>
-
-                <p className="font-bold">
-                  Coach IA
-                </p>
-
-                <p className="text-xs text-slate-400">
-                  Leçon {lesson.number}
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="mt-6 rounded-2xl bg-slate-100 p-4 text-sm leading-6 text-slate-600">
-              Une notion n’est pas claire ?
-              Posez une question ou demandez
-              un exemple supplémentaire.
-            </div>
-
-            <textarea
-              className="mt-4 min-h-32 w-full resize-none rounded-2xl border border-slate-200 p-4 text-sm outline-none transition focus:border-slate-950"
-              placeholder="Posez votre question..."
-            />
-
-            <button
-              type="button"
-              className="mt-3 w-full rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:scale-[1.01]"
-            >
-              Envoyer
-            </button>
-
-            <p className="mt-3 text-center text-xs text-slate-400">
-              Le Coach IA sera activé prochainement.
-            </p>
-
-          </aside>
+          <LessonCoach lessonId={lesson.id} lessonLabel={`Leçon ${lesson.number}`} />
 
         </div>
 
