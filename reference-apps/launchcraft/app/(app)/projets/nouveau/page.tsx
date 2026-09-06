@@ -1,0 +1,1 @@
+import PageHeader from "@/components/PageHeader";import ProjectForm from "@/components/ProjectForm";export default function NewProjectPage(){return <main id="main-content" tabIndex={-1}><PageHeader eyebrow="NOUVEAU LANCEMENT" title="Créer un projet" description="Définissez un cadre clair pour votre lancement."/><ProjectForm/></main>}

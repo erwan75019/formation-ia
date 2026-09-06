@@ -1,0 +1,3 @@
+export default function ProgressBar({ value, label = "Progression" }: { value: number | null; label?: string }) {
+  return <div className="progress-block"><div className="progress-label"><span>{label}</span><strong>{value === null ? "—" : `${value} %`}</strong></div><div className="progress-track" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={value ?? 0} aria-valuetext={value === null ? "Aucune tâche" : `${value} pour cent`}><span style={{ width: `${value ?? 0}%` }} /></div>{value === null && <small>Ajoutez des tâches pour calculer la progression.</small>}</div>;
+}

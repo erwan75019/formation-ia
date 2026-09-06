@@ -1,0 +1,1 @@
+import Link from "next/link";export default function NotFound(){return <main id="main-content" tabIndex={-1} className="not-found"><p className="eyebrow">ERREUR 404</p><h1>Projet introuvable</h1><p>Ce projet fictif n’existe pas dans le catalogue local de LaunchCraft.</p><Link className="button primary" href="/projets">Retour aux projets</Link></main>}

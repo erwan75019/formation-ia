@@ -1,0 +1,3 @@
+import { calculateProgress } from "@/lib/metrics";
+import type { LaunchProject, LaunchTask } from "@/types/launchcraft";
+export default function ProgressChart({projects,tasks}:{projects:readonly LaunchProject[];tasks:readonly LaunchTask[]}){return <section className="panel chart"><div className="panel-heading"><div><p className="eyebrow">PORTEFEUILLE</p><h2>Progression des projets</h2></div></div><div className="chart-bars">{projects.map((project)=>{const value=calculateProgress(project.id,tasks)??0;return <div key={project.id}><div><span>{project.title}</span><strong>{value}%</strong></div><div className="chart-track"><span style={{width:`${value}%`}}/></div></div>})}</div></section>}

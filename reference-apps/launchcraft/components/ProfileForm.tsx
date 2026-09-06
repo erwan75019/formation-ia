@@ -1,0 +1,4 @@
+"use client";
+import {useActionState} from "react";import {useFormStatus} from "react-dom";import {initialFormState} from "@/app/actions/auth";import {updateProfile} from "@/app/actions/workspace";
+function Submit(){const{pending}=useFormStatus();return <button className="button primary" disabled={pending}>{pending?"Enregistrement…":"Enregistrer"}</button>}
+export default function ProfileForm({firstName,email}:{firstName:string;email:string}){const[state,action]=useActionState(updateProfile,initialFormState);return <form action={action}><label>Prénom<input name="first_name" defaultValue={firstName} minLength={2} maxLength={80} required/></label><label>Adresse email<input value={email} readOnly/></label>{state.error&&<p className="form-error" role="alert">{state.error}</p>}{state.success&&<p className="form-success" role="status">{state.success}</p>}<Submit/></form>}

@@ -1,0 +1,3 @@
+import type { ReactNode } from "react";
+import Link from "next/link";
+export default function AuthLayout({children}:{children:ReactNode}){return <main id="main-content" tabIndex={-1} className="auth-shell"><section className="auth-brand"><Link className="brand" href="/connexion"><span>LC</span><strong>LaunchCraft</strong></Link><div><p className="eyebrow">ORGANISER · EXÉCUTER · LANCER</p><h2>Transformez une idée en plan de lancement clair.</h2><p>Vos projets, objectifs et tâches restent isolés dans votre espace personnel.</p></div><small>Authentification sécurisée par votre projet Supabase LaunchCraft</small></section>{children}</main>}
