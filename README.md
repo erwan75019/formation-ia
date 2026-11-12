@@ -305,3 +305,7 @@ Engineering student at ENSISA
 Computer Science & Networks — Data Science & Artificial Intelligence
 
 GitHub: [@erwan75019](https://github.com/erwan75019)
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
